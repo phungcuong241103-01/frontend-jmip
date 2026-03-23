@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+// Ưu tiên env, fallback về localhost khi dev
+const API_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -9,6 +11,7 @@ const apiClient = axios.create({
     'Content-Type': 'application/json'
   }
 });
+
 
 // Response interceptor for unified format handling
 apiClient.interceptors.response.use(

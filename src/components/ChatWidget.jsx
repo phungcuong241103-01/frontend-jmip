@@ -1,14 +1,29 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { chatWithAI } from '../services/api';
 
+const STORAGE_KEY = 'jmip_chat_history';
+const DEFAULT_MSG = { role: 'ai', content: 'Chào bạn! Mình là JMIP Assistant. Bạn cần mình tư vấn về nghề nghiệp hay phân tích kỹ năng IT?' };
+
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    { role: 'ai', content: 'Chào bạn! Mình là JMIP Assistant. Bạn cần mình tư vấn về nghề nghiệp hay phân tích kỹ năng IT?' }
-  ]);
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) && parsed.length > 0 ? parsed : [DEFAULT_MSG];
+      }
+    } catch {}
+    return [DEFAULT_MSG];
+  });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch {}
+  }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -60,6 +75,13 @@ const ChatWidget = () => {
             </div>
             <button onClick={() => setIsOpen(false)} className="text-white hover:text-zinc-200 cursor-pointer">
               <span className="material-symbols-outlined">close</span>
+            </button>
+            <button
+              onClick={() => { setMessages([DEFAULT_MSG]); localStorage.removeItem(STORAGE_KEY); }}
+              title="Xóa lịch sử"
+              className="text-white/60 hover:text-white cursor-pointer ml-1"
+            >
+              <span className="material-symbols-outlined text-lg">delete_sweep</span>
             </button>
           </div>
 

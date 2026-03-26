@@ -1,6 +1,6 @@
 import React from 'react';
 
-const JobCard = ({ job, isLowest }) => {
+const JobCard = ({ job, isLowest, selectedSkills = [] }) => {
   // Map backend data to display names
   const company = job.company_name || job.company || 'Unknown Company';
   const location = job.city || job.location || 'Vietnam';
@@ -33,14 +33,21 @@ const JobCard = ({ job, isLowest }) => {
           </div>
         </div>
         <div className="flex flex-wrap gap-2 mt-4">
-          {skills.map((skill, index) => (
-            <span
-              key={index}
-              className="px-3 py-1 bg-zinc-50 text-[10px] font-bold uppercase tracking-wider text-zinc-600"
-            >
-              {skill}
-            </span>
-          ))}
+          {skills.map((skill, index) => {
+            const isHighlighted = selectedSkills.includes(skill);
+            return (
+              <span
+                key={index}
+                className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                  isHighlighted 
+                    ? 'bg-primary text-white shadow-sm' 
+                    : 'bg-zinc-50 text-zinc-600'
+                }`}
+              >
+                {skill}
+              </span>
+            );
+          })}
           {job.level_name && (
             <span className="px-3 py-1 bg-orange-50 text-[10px] font-bold uppercase tracking-wider text-orange-700">
               {job.level_name}
@@ -52,6 +59,22 @@ const JobCard = ({ job, isLowest }) => {
         <div className="text-2xl font-headline font-black text-zinc-900 tracking-tighter mb-1">
           {salary}
         </div>
+        {job.url && (
+          <a
+            href={job.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1 text-[10px] font-bold text-primary hover:text-primary/80 uppercase tracking-widest transition-colors mb-1"
+            title={job.url}
+          >
+            <span className="material-symbols-outlined text-xs">link</span>
+            {(() => {
+              try { return new URL(job.url).hostname.replace('www.', ''); }
+              catch { return 'Nguồn'; }
+            })()}
+          </a>
+        )}
         {job.posted_at && (
           <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
             {new Date(job.posted_at).toLocaleDateString('vi-VN')}

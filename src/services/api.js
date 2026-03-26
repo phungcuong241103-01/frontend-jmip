@@ -81,6 +81,14 @@ export const getAnalyticsTrend = async () => {
   return apiClient.get('/analytics/trend');
 };
 
+export const getAnalyticsSalaryByRole = async () => {
+  return apiClient.get('/analytics/salary-by-role');
+};
+
+export const getAnalyticsLevels = async () => {
+  return apiClient.get('/analytics/levels');
+};
+
 // Chat APIs
 export const chatWithAI = async (message) => {
   return apiClient.post('/chat', { message });

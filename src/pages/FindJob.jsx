@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import JobCard from '../components/JobCard';
 import { getJobs, getLocations, getLevels, getSkills } from '../services/api';
 
 const FindJob = () => {
+  const [searchParams] = useSearchParams();
   const [jobs, setJobs] = useState([]);
   const [locations, setLocations] = useState([]);
   const [levels, setLevels] = useState([]);
@@ -18,7 +20,7 @@ const FindJob = () => {
   const [skillSearch, setSkillSearch] = useState('');
 
   const [filters, setFilters] = useState({
-    search: '',
+    search: searchParams.get('search') || '',
     location: '',
     level: '',
     skills: [],
@@ -43,60 +45,38 @@ const FindJob = () => {
     fetchMetadata();
   }, []);
 
-useEffect(() => {
-  const fetchJobs = async () => {
-    setLoading(true);
-    try {
-      const params = {
-        page: filters.page,
-        limit: 50,
-        search: filters.search,
-        location: filters.location,
-        level: filters.level,
-        skills: filters.skills.join(',')
-      };
-
-      const data = await getJobs(params);
-      console.log("API DATA:", data);
-
-      // ✅ Handle nhiều kiểu response khác nhau
-      const jobsData =
-        data?.jobs ||
-        data?.data?.jobs ||
-        [];
-
-      const paginationData =
-        data?.pagination ||
-        data?.data?.pagination ||
-        {
-          currentPage: 1,
-          totalPages: 1,
-          totalItems: 0,
-          limit: 50
+  useEffect(() => {
+    const fetchJobs = async () => {
+      setLoading(true);
+      try {
+        const params = {
+          page: filters.page,
+          limit: 50,
+          search: filters.search,
+          location: filters.location,
+          level: filters.level,
+          skills: filters.skills.join(',')
         };
 
-      setJobs(jobsData);
-      setPagination(paginationData);
+        const data = await getJobs(params);
 
-    } catch (err) {
-      console.error('Error fetching jobs:', err);
+        const jobsData = data?.jobs || data?.data?.jobs || [];
+        const paginationData = data?.pagination || data?.data?.pagination || {
+          currentPage: 1, totalPages: 1, totalItems: 0, limit: 50
+        };
 
-      // ✅ fallback khi lỗi
-      setJobs([]);
-      setPagination({
-        currentPage: 1,
-        totalPages: 1,
-        totalItems: 0,
-        limit: 50
-      });
-
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchJobs();
-}, [filters]);
+        setJobs(jobsData);
+        setPagination(paginationData);
+      } catch (err) {
+        console.error('Error fetching jobs:', err);
+        setJobs([]);
+        setPagination({ currentPage: 1, totalPages: 1, totalItems: 0, limit: 50 });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchJobs();
+  }, [filters]);
 
   const handleFilterChange = (name, value) => {
     setFilters(prev => ({ ...prev, [name]: value, page: 1 }));
@@ -117,9 +97,32 @@ useEffect(() => {
     }
   };
 
+  // Sliding window pagination
+  const getPageNumbers = () => {
+    const { currentPage, totalPages } = pagination;
+    const pages = [];
+    const delta = 2;
+
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+      return pages;
+    }
+
+    pages.push(1);
+    const rangeStart = Math.max(2, currentPage - delta);
+    const rangeEnd = Math.min(totalPages - 1, currentPage + delta);
+
+    if (rangeStart > 2) pages.push('...');
+    for (let i = rangeStart; i <= rangeEnd; i++) pages.push(i);
+    if (rangeEnd < totalPages - 1) pages.push('...');
+
+    pages.push(totalPages);
+    return pages;
+  };
+
   return (
     <main className="pt-16 min-h-screen flex">
-      {/* SideNavBar (Filter Context) */}
+      {/* SideNavBar */}
       <aside className="bg-zinc-50 flex flex-col h-[calc(100vh-64px)] w-80 fixed left-0 overflow-y-auto border-r-0">
         <div className="p-8 space-y-8">
           <div>
@@ -134,18 +137,14 @@ useEffect(() => {
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
               />
-              <span className="material-symbols-outlined absolute right-3 top-3 text-zinc-400">
-                search
-              </span>
+              <span className="material-symbols-outlined absolute right-3 top-3 text-zinc-400">search</span>
             </div>
           </div>
-          {/* Skill Multi-Select with Search */}
+          {/* Skill Multi-Select */}
           <div>
             <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant block mb-4">
               Kỹ năng cốt lõi
             </span>
-            
-            {/* Selected Tags */}
             {filters.skills.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-3 border-b border-outline-variant/20 pb-4">
                 {filters.skills.map((skillName) => (
@@ -165,8 +164,6 @@ useEffect(() => {
                 </span>
               </div>
             )}
-
-            {/* Search Input */}
             <div className="relative mb-3">
               <input
                 type="text"
@@ -175,35 +172,38 @@ useEffect(() => {
                 value={skillSearch}
                 onChange={(e) => setSkillSearch(e.target.value)}
               />
-              <span className="material-symbols-outlined absolute right-2 top-2.5 text-zinc-400 text-lg">
-                search
-              </span>
+              <span className="material-symbols-outlined absolute right-2 top-2.5 text-zinc-400 text-lg">search</span>
             </div>
-
-            {/* Available Skills List */}
             <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1 scrollbar-thin scrollbar-thumb-zinc-200">
               {skills
-                .filter(skill => skill.name.toLowerCase().includes(skillSearch.toLowerCase()) && !filters.skills.includes(skill.name))
-                .map((skill) => (
-                <span
-                  key={skill.id}
-                  onClick={() => handleSkillToggle(skill.name)}
-                  className="px-3 py-1 text-xs font-medium cursor-pointer transition-colors bg-white border border-outline-variant hover:border-primary hover:text-primary"
-                >
-                  {skill.name}
-                </span>
-              ))}
-              {skills.filter(skill => skill.name.toLowerCase().includes(skillSearch.toLowerCase()) && !filters.skills.includes(skill.name)).length === 0 && (
+                .filter(skill => skill.name.toLowerCase().includes(skillSearch.toLowerCase()))
+                .map((skill) => {
+                  const isSelected = filters.skills.includes(skill.name);
+                  return (
+                    <span
+                      key={skill.id}
+                      onClick={() => handleSkillToggle(skill.name)}
+                      className={`px-3 py-1 text-xs font-medium cursor-pointer transition-colors border ${
+                        isSelected
+                          ? 'bg-primary text-white border-primary shadow-sm'
+                          : 'bg-white border-outline-variant hover:border-primary hover:text-primary'
+                      }`}
+                    >
+                      {skill.name}
+                    </span>
+                  );
+                })}
+              {skills.filter(skill => skill.name.toLowerCase().includes(skillSearch.toLowerCase())).length === 0 && (
                 <span className="text-xs text-zinc-400 italic">Không tìm thấy kỹ năng phù hợp.</span>
               )}
             </div>
           </div>
-          {/* Location Dropdown */}
+          {/* Location */}
           <div>
             <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant block mb-4">
               Địa điểm
             </span>
-            <select 
+            <select
               className="w-full bg-surface-container-lowest border-none focus:ring-2 focus:ring-primary h-12 px-4 text-sm font-body outline-none"
               value={filters.location}
               onChange={(e) => handleFilterChange('location', e.target.value)}
@@ -229,11 +229,7 @@ useEffect(() => {
                     name="level"
                     onChange={() => handleFilterChange('level', level.name)}
                   />
-                  <span
-                    className={`text-sm font-medium ${
-                      filters.level === level.name ? 'text-zinc-900' : 'text-zinc-600 group-hover:text-zinc-900'
-                    }`}
-                  >
+                  <span className={`text-sm font-medium ${filters.level === level.name ? 'text-zinc-900' : 'text-zinc-600 group-hover:text-zinc-900'}`}>
                     {level.name}
                   </span>
                 </label>
@@ -252,7 +248,7 @@ useEffect(() => {
               </label>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setFilters(prev => ({ ...prev, page: 1 }))}
             className="w-full bg-primary text-white py-4 font-headline font-bold tracking-tight hover:bg-primary-container hover:text-on-primary-container transition-all cursor-pointer"
           >
@@ -261,9 +257,8 @@ useEffect(() => {
         </div>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <section className="ml-80 w-full p-8 lg:p-12">
-        {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
           <div className="max-w-2xl">
             <h1 className="text-5xl font-headline font-extrabold tracking-tighter text-zinc-900 mb-2 leading-tight">
@@ -276,24 +271,23 @@ useEffect(() => {
             </p>
           </div>
         </div>
-        
-        {/* Job Grid */}
+
         <div className="grid grid-cols-1 gap-1">
           {loading ? (
             <div className="py-20 text-center text-zinc-500 font-medium">Đang tải dữ liệu...</div>
           ) : jobs.length > 0 ? (
             jobs.map((job, index) => (
-              <JobCard key={job.id} job={job} isLowest={index % 2 === 0} />
+              <JobCard key={job.id} job={job} isLowest={index % 2 === 0} selectedSkills={filters.skills} />
             ))
           ) : (
             <div className="py-20 text-center text-zinc-500 font-medium">Không tìm thấy việc làm phù hợp.</div>
           )}
         </div>
 
-        {/* Pagination */}
+        {/* Pagination — Sliding Window */}
         {pagination.totalPages > 1 && (
           <div className="mt-16 flex justify-between items-center py-8 border-t border-zinc-100">
-            <button 
+            <button
               disabled={pagination.currentPage === 1}
               onClick={() => handlePageChange(pagination.currentPage - 1)}
               className={`flex items-center gap-2 transition-colors font-bold text-xs uppercase tracking-widest cursor-pointer ${
@@ -302,34 +296,29 @@ useEffect(() => {
             >
               <span className="material-symbols-outlined text-sm">arrow_back</span> Trước
             </button>
-            <div className="flex gap-4">
-              {[...Array(Math.min(5, pagination.totalPages))].map((_, i) => {
-                const pageNum = i + 1;
+            <div className="flex gap-2 items-center">
+              {getPageNumbers().map((page, idx) => {
+                if (page === '...') {
+                  return (
+                    <span key={`ellipsis-${idx}`} className="text-zinc-300 font-black text-sm px-1">...</span>
+                  );
+                }
                 return (
                   <span
-                    key={pageNum}
-                    onClick={() => handlePageChange(pageNum)}
-                    className={`text-sm font-black cursor-pointer ${
-                      pagination.currentPage === pageNum ? 'text-primary' : 'text-zinc-300 hover:text-zinc-900'
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`text-sm font-black cursor-pointer px-2 py-1 transition-colors ${
+                      pagination.currentPage === page
+                        ? 'text-primary bg-primary/10'
+                        : 'text-zinc-300 hover:text-zinc-900'
                     }`}
                   >
-                    {pageNum.toString().padStart(2, '0')}
+                    {page.toString().padStart(2, '0')}
                   </span>
                 );
               })}
-              {pagination.totalPages > 5 && <span className="text-zinc-300 font-black text-sm">...</span>}
-              {pagination.totalPages > 5 && (
-                <span
-                  onClick={() => handlePageChange(pagination.totalPages)}
-                  className={`text-sm font-black cursor-pointer ${
-                    pagination.currentPage === pagination.totalPages ? 'text-primary' : 'text-zinc-300 hover:text-zinc-900'
-                  }`}
-                >
-                  {pagination.totalPages.toString().padStart(2, '0')}
-                </span>
-              )}
             </div>
-            <button 
+            <button
               disabled={pagination.currentPage === pagination.totalPages}
               onClick={() => handlePageChange(pagination.currentPage + 1)}
               className={`flex items-center gap-2 transition-colors font-bold text-xs uppercase tracking-widest cursor-pointer ${

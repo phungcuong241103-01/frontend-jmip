@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import JobCard from '../components/JobCard';
-import { getJobs, getLocations, getLevels, getSkills } from '../services/api';
+import { getJobs, getLocations, getLevels, getSkills, getRoles, getAnalyticsRoles } from '../services/api';
 
 const FindJob = () => {
   const [searchParams] = useSearchParams();
@@ -9,6 +9,9 @@ const FindJob = () => {
   const [locations, setLocations] = useState([]);
   const [levels, setLevels] = useState([]);
   const [skills, setSkills] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [roleSkillsMap, setRoleSkillsMap] = useState({});
+  const [selectedRole, setSelectedRole] = useState('');
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -23,6 +26,7 @@ const FindJob = () => {
     search: searchParams.get('search') || '',
     location: '',
     level: '',
+    role: '',
     skills: [],
     page: 1
   });
@@ -30,14 +34,32 @@ const FindJob = () => {
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
-        const [locs, levs, sks] = await Promise.all([
+        const [locsRes, levsRes, sksRes, rlsRes, analyticsRes] = await Promise.allSettled([
           getLocations(),
           getLevels(),
-          getSkills()
+          getSkills(),
+          getRoles(),
+          getAnalyticsRoles()
         ]);
-        setLocations(locs);
-        setLevels(levs);
-        setSkills(sks);
+
+        const locs = locsRes.status === 'fulfilled' ? locsRes.value : [];
+        const levs = levsRes.status === 'fulfilled' ? levsRes.value : [];
+        const sks  = sksRes.status  === 'fulfilled' ? sksRes.value  : [];
+        const rls  = rlsRes.status  === 'fulfilled' ? rlsRes.value  : [];
+        const analyticsRoles = analyticsRes.status === 'fulfilled' ? analyticsRes.value : null;
+
+        setLocations(Array.isArray(locs) ? locs : (locs?.data || []));
+        setLevels(Array.isArray(levs) ? levs : (levs?.data || []));
+        setSkills(Array.isArray(sks) ? sks : (sks?.data || []));
+        setRoles(Array.isArray(rls) ? rls : (rls?.data || []));
+
+        // Build role -> skills mapping from role_skills
+        const map = {};
+        const rolesData = Array.isArray(analyticsRoles) ? analyticsRoles : (analyticsRoles?.data || []);
+        rolesData.forEach(r => {
+          map[r.role] = r.skills || [];
+        });
+        setRoleSkillsMap(map);
       } catch (err) {
         console.error('Error fetching metadata:', err);
       }
@@ -80,6 +102,13 @@ const FindJob = () => {
 
   const handleFilterChange = (name, value) => {
     setFilters(prev => ({ ...prev, [name]: value, page: 1 }));
+  };
+
+  const handleRoleChange = (roleName) => {
+    setSelectedRole(roleName);
+    // Reset skills filter when changing role
+    setFilters(prev => ({ ...prev, skills: [], page: 1 }));
+    setSkillSearch('');
   };
 
   const handleSkillToggle = (skillName) => {
@@ -176,7 +205,11 @@ const FindJob = () => {
             </div>
             <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1 scrollbar-thin scrollbar-thumb-zinc-200">
               {skills
-                .filter(skill => skill.name.toLowerCase().includes(skillSearch.toLowerCase()))
+                .filter(skill => {
+                  const matchSearch = skill.name.toLowerCase().includes(skillSearch.toLowerCase());
+                  if (!selectedRole || !roleSkillsMap[selectedRole]?.length) return matchSearch;
+                  return matchSearch && roleSkillsMap[selectedRole].includes(skill.name);
+                })
                 .map((skill) => {
                   const isSelected = filters.skills.includes(skill.name);
                   return (
@@ -193,10 +226,30 @@ const FindJob = () => {
                     </span>
                   );
                 })}
-              {skills.filter(skill => skill.name.toLowerCase().includes(skillSearch.toLowerCase())).length === 0 && (
+              {skills.filter(skill => {
+                const matchSearch = skill.name.toLowerCase().includes(skillSearch.toLowerCase());
+                if (!selectedRole || !roleSkillsMap[selectedRole]?.length) return matchSearch;
+                return matchSearch && roleSkillsMap[selectedRole].includes(skill.name);
+              }).length === 0 && (
                 <span className="text-xs text-zinc-400 italic">Không tìm thấy kỹ năng phù hợp.</span>
               )}
             </div>
+          </div>
+          {/* Role */}
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant block mb-4">
+              Vai trò (Role)
+            </span>
+            <select
+              className="w-full bg-surface-container-lowest border-none focus:ring-2 focus:ring-primary h-12 px-4 text-sm font-body outline-none"
+              value={selectedRole}
+              onChange={(e) => handleRoleChange(e.target.value)}
+            >
+              <option value="">Tất cả vai trò</option>
+              {roles.map((r) => (
+                <option key={r.id} value={r.name}>{r.name}</option>
+              ))}
+            </select>
           </div>
           {/* Location */}
           <div>

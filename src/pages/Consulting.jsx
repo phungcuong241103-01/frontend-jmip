@@ -1,21 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { getFilters, chatWithAI } from '../services/api';
+import { getFilters, chatWithAI, getAnalyticsRoles } from '../services/api';
 
 const Consulting = () => {
   const [filters, setFilters] = useState({ roles: [], levels: [], skills: [] });
+  const [roleSkillsMap, setRoleSkillsMap] = useState({});
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('');
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [advice, setAdvice] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [skillSearch, setSkillSearch] = useState('');
 
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
-        const data = await getFilters();
+        const [filtersData, analyticsRes] = await Promise.allSettled([
+          getFilters(),
+          getAnalyticsRoles()
+        ]);
+        const data = filtersData.status === 'fulfilled' ? filtersData.value : { roles: [], levels: [], skills: [] };
         setFilters(data);
-        if (data.roles.length > 0) setSelectedRole(data.roles[0].name);
-        if (data.levels.length > 0) setSelectedLevel(data.levels[0].name);
+        if (data.roles?.length > 0) setSelectedRole(data.roles[0].name);
+        if (data.levels?.length > 0) setSelectedLevel(data.levels[0].name);
+
+        // Build role -> skills mapping
+        if (analyticsRes.status === 'fulfilled') {
+          const rolesData = analyticsRes.value?.data || [];
+          const map = {};
+          rolesData.forEach(r => { map[r.role] = r.skills || []; });
+          setRoleSkillsMap(map);
+        }
       } catch (err) {
         console.error('Failed to fetch filters:', err);
       }
@@ -77,7 +91,11 @@ const Consulting = () => {
                 </label>
                 <select 
                   value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedRole(e.target.value);
+                    setSelectedSkills([]);
+                    setSkillSearch('');
+                  }}
                   className="w-full bg-surface-container-low border-b-2 border-transparent focus:border-primary focus:ring-0 px-6 py-5 text-base font-medium outline-none cursor-pointer transition-all"
                 >
                   {filters.roles.map((r) => (
@@ -110,8 +128,24 @@ const Consulting = () => {
                   Kỹ năng hiện có (Skills)
                 </label>
                 <div className="bg-surface-container-low p-6 border border-outline-variant/5">
-                  <div className="flex flex-wrap gap-2">
-                    {filters.skills.slice(0, 24).map((s) => {
+                  <div className="relative mb-4">
+                    <input
+                      type="text"
+                      placeholder="Tìm kiếm kỹ năng..."
+                      className="w-full bg-white border border-outline-variant/30 focus:border-primary focus:ring-1 focus:ring-primary h-10 px-3 pr-8 text-sm font-body outline-none transition-all"
+                      value={skillSearch}
+                      onChange={(e) => setSkillSearch(e.target.value)}
+                    />
+                    <span className="material-symbols-outlined absolute right-2 top-2.5 text-zinc-400 text-lg">search</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-200">
+                    {filters.skills
+                      .filter(s => {
+                        const matchSearch = s.name.toLowerCase().includes(skillSearch.toLowerCase());
+                        if (!selectedRole || !roleSkillsMap[selectedRole]?.length) return matchSearch;
+                        return matchSearch && roleSkillsMap[selectedRole].includes(s.name);
+                      })
+                      .map((s) => {
                       const isSelected = selectedSkills.includes(s.name);
                       return (
                         <button
@@ -127,6 +161,13 @@ const Consulting = () => {
                         </button>
                       );
                     })}
+                    {filters.skills.filter(s => {
+                      const matchSearch = s.name.toLowerCase().includes(skillSearch.toLowerCase());
+                      if (!selectedRole || !roleSkillsMap[selectedRole]?.length) return matchSearch;
+                      return matchSearch && roleSkillsMap[selectedRole].includes(s.name);
+                    }).length === 0 && (
+                      <span className="text-xs text-zinc-400 italic">Không tìm thấy kỹ năng phù hợp.</span>
+                    )}
                   </div>
                 </div>
               </div>

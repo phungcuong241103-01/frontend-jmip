@@ -91,6 +91,10 @@ export const getAnalyticsLevels = async () => {
   return apiClient.get('/analytics/levels');
 };
 
+export const getAnalyticsRoles = async () => {
+  return apiClient.get('/analytics/roles');
+};
+
 // Chat APIs
 export const chatWithAI = async (message) => {
   return apiClient.post('/chat', { message });

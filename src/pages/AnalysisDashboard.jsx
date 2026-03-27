@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getStats, getJobs, getAnalyticsSalaryByRole, getAnalyticsLevels, getAnalyticsTrend } from '../services/api';
+import { getStats, getJobs, getAnalyticsSalaryByRole, getAnalyticsLevels, getAnalyticsTrend, getAnalyticsRoles } from '../services/api';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend
@@ -61,6 +61,7 @@ const AnalysisDashboard = () => {
   const [salaryByRole, setSalaryByRole] = useState([]);
   const [levelStats, setLevelStats] = useState([]);
   const [trendData, setTrendData] = useState([]);
+  const [roleStats, setRoleStats] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Search & Pagination for Top Skills
@@ -76,12 +77,13 @@ const AnalysisDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsData, jobsData, salaryData, levelsData, trendRes] = await Promise.all([
+        const [statsData, jobsData, salaryData, levelsData, trendRes, rolesRes] = await Promise.all([
           getStats(),
           getJobs({ limit: 4 }),
           getAnalyticsSalaryByRole().catch(() => ({ data: [] })),
           getAnalyticsLevels().catch(() => ({ data: [] })),
-          getAnalyticsTrend().catch(() => ({ data: [] }))
+          getAnalyticsTrend().catch(() => ({ data: [] })),
+          getAnalyticsRoles().catch(() => ({ data: [] }))
         ]);
 
         setStats(statsData);
@@ -92,6 +94,7 @@ const AnalysisDashboard = () => {
           date: new Date(d.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
           count: d.count
         })));
+        setRoleStats(rolesRes?.data || rolesRes || []);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
       } finally {
@@ -344,6 +347,58 @@ const AnalysisDashboard = () => {
         {/* Các phần còn lại giữ nguyên (Lương, Kinh nghiệm, Recent Jobs) */}
         {/* ... (RankingTable cho Salary, Level, và Recent Jobs) ... */}
         {/* Bạn có thể copy phần cũ từ code gốc của bạn vào đây */}
+
+        {/* ==================== NHU CẦU VIỆC LÀM THEO VAI TRÒ ==================== */}
+        {roleStats.length > 0 && (
+          <div className="bg-white border border-outline-variant/20 p-8 mb-8 shadow-sm">
+            <div className="mb-6">
+              <h2 className="text-2xl font-headline font-extrabold tracking-tight">Nhu cầu việc làm theo Vai trò</h2>
+              <p className="text-sm text-on-surface-variant">Số lượng tin tuyển dụng theo từng vai trò công nghệ</p>
+            </div>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={roleStats} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis
+                  dataKey="role"
+                  tick={{ fontSize: 11, fontWeight: 600 }}
+                  angle={-35}
+                  textAnchor="end"
+                  interval={0}
+                />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip
+                  formatter={(value) => [value + ' jobs', 'Số lượng']}
+                  contentStyle={{ border: 'none', borderRadius: 0, fontSize: 12, fontWeight: 600 }}
+                />
+                <Bar dataKey="job_count" fill="#6366f1" radius={[2, 2, 0, 0]} label={{ position: 'top', fontSize: 10, fontWeight: 700 }} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* ==================== PHÂN TÍCH LƯƠNG THEO VAI TRÒ ==================== */}
+        {roleStats.filter(r => r.avg_min).length > 0 && (
+          <div className="bg-white border border-outline-variant/20 p-8 mb-8 shadow-sm">
+            <div className="mb-6">
+              <h2 className="text-2xl font-headline font-extrabold tracking-tight">Phân tích Lương theo Vai trò</h2>
+              <p className="text-sm text-on-surface-variant">Mức lương trung bình (min–max) theo từng vai trò, tính từ tin có số liệu cụ thể</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+              {roleStats
+                .filter(r => r.avg_min && r.avg_max)
+                .map((item, i) => (
+                  <RankingRow
+                    key={item.role}
+                    rank={i + 1}
+                    label={item.role}
+                    value={item.avg_max}
+                    maxValue={Math.max(...roleStats.filter(r => r.avg_max).map(r => r.avg_max))}
+                    subLabel={<>{formatVND(item.avg_min)} – {formatVND(item.avg_max)} <span className="text-[9px] font-normal text-zinc-400">({item.job_count} jobs)</span></>}
+                  />
+                ))}
+            </div>
+          </div>
+        )}
 
         {/* Section 4: Mức lương trung bình theo Cấp bậc */}
         <RankingTable

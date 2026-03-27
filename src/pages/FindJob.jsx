@@ -77,6 +77,7 @@ const FindJob = () => {
           search: filters.search,
           location: filters.location,
           level: filters.level,
+          role: filters.role,
           skills: filters.skills.join(',')
         };
 
@@ -106,8 +107,8 @@ const FindJob = () => {
 
   const handleRoleChange = (roleName) => {
     setSelectedRole(roleName);
-    // Reset skills filter when changing role
-    setFilters(prev => ({ ...prev, skills: [], page: 1 }));
+    // Update job filter AND reset skill selection when changing role
+    setFilters(prev => ({ ...prev, role: roleName, skills: [], page: 1 }));
     setSkillSearch('');
   };
 

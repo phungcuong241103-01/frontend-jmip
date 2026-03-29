@@ -80,10 +80,10 @@ const AnalysisDashboard = () => {
         const [statsData, jobsData, salaryData, levelsData, trendRes, rolesRes] = await Promise.all([
           getStats(),
           getJobs({ limit: 4 }),
-          getAnalyticsSalaryByRole().catch(() => ({ data: [] })),
-          getAnalyticsLevels().catch(() => ({ data: [] })),
-          getAnalyticsTrend().catch(() => ({ data: [] })),
-          getAnalyticsRoles().catch(() => ({ data: [] }))
+          getAnalyticsSalaryByRole().catch((err) => { console.error('salary-by-role error:', err); return { data: [] }; }),
+          getAnalyticsLevels().catch((err) => { console.error('levels error:', err); return { data: [] }; }),
+          getAnalyticsTrend().catch((err) => { console.error('trend error:', err); return { data: [] }; }),
+          getAnalyticsRoles().catch((err) => { console.error('roles error:', err); return { data: [] }; })
         ]);
 
         setStats(statsData);
@@ -94,7 +94,11 @@ const AnalysisDashboard = () => {
           date: new Date(d.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
           count: d.count
         })));
-        setRoleStats(rolesRes?.data || rolesRes || []);
+        
+        const rolesData = rolesRes?.data || rolesRes || [];
+        console.log('Role analytics raw response:', rolesRes);
+        console.log('Role analytics parsed data:', rolesData);
+        setRoleStats(rolesData);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
       } finally {
@@ -158,31 +162,31 @@ const AnalysisDashboard = () => {
 
   return (
     <div className="flex pt-16 min-h-screen">
-      <main className="flex-1 p-8 bg-surface">
+      <main className="flex-1 p-4 md:p-8 bg-surface">
         {/* Header */}
-        <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="mb-6 md:mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <span className="text-[11px] font-bold uppercase tracking-widest text-primary mb-2 block">
               Bức tranh CNTT Toàn cầu
             </span>
-            <h1 className="text-4xl lg:text-5xl font-headline font-extrabold tracking-tight text-on-surface">
+            <h1 className="text-2xl md:text-4xl lg:text-5xl font-headline font-extrabold tracking-tight text-on-surface">
               Bảng điều khiển Phân tích
             </h1>
           </div>
         </div>
 
         {/* Overview Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
           {analysisStats.map((stat, i) => (
-            <div key={i} className="bg-surface-container-lowest p-6 flex flex-col justify-between h-32 group relative transition-all hover:shadow-lg">
+            <div key={i} className="bg-surface-container-lowest p-4 md:p-6 flex flex-col justify-between h-28 md:h-32 group relative transition-all hover:shadow-lg">
               <div className="flex justify-between items-start">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+                <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-on-surface-variant leading-tight">
                   {stat.label}
                 </span>
                 <span className="material-symbols-outlined text-primary text-xl">{stat.icon}</span>
               </div>
               <div>
-                <span className="text-3xl font-headline font-extrabold tracking-tighter">
+                <span className="text-xl md:text-3xl font-headline font-extrabold tracking-tighter">
                   {stat.value}
                 </span>
                 <div className="text-[10px] text-tertiary font-bold mt-1">{stat.trend}</div>
@@ -193,10 +197,10 @@ const AnalysisDashboard = () => {
         </div>
 
         {/* ==================== TOP KỸ NĂNG ==================== */}
-        <div className="bg-white border border-outline-variant/20 p-8 mb-8 shadow-sm">
-          <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-8">
+        <div className="bg-white border border-outline-variant/20 p-4 md:p-8 mb-6 md:mb-8 shadow-sm">
+          <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-6 md:mb-8">
             <div>
-              <h2 className="text-2xl font-headline font-extrabold tracking-tight">Top Kỹ năng Phổ biến</h2>
+              <h2 className="text-xl md:text-2xl font-headline font-extrabold tracking-tight">Top Kỹ năng Phổ biến</h2>
               <p className="text-sm text-on-surface-variant">Xếp hạng dựa trên số lượng tin tuyển dụng hiện có</p>
             </div>
 
@@ -268,10 +272,10 @@ const AnalysisDashboard = () => {
         </div>
 
         {/* ==================== PHÂN TÍCH THEO ĐỊA ĐIỂM ==================== */}
-        <div className="bg-white border border-outline-variant/20 p-8 mb-8 shadow-sm">
-          <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-8">
+        <div className="bg-white border border-outline-variant/20 p-4 md:p-8 mb-6 md:mb-8 shadow-sm">
+          <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-6 md:mb-8">
             <div>
-              <h2 className="text-2xl font-headline font-extrabold tracking-tight">Phân tích theo Địa điểm</h2>
+              <h2 className="text-xl md:text-2xl font-headline font-extrabold tracking-tight">Phân tích theo Địa điểm</h2>
               <p className="text-sm text-on-surface-variant">Top khu vực tuyển dụng theo số lượng tin đăng</p>
             </div>
 
@@ -349,21 +353,22 @@ const AnalysisDashboard = () => {
         {/* Bạn có thể copy phần cũ từ code gốc của bạn vào đây */}
 
         {/* ==================== NHU CẦU VIỆC LÀM THEO VAI TRÒ ==================== */}
-        {roleStats.length > 0 && (
-          <div className="bg-white border border-outline-variant/20 p-8 mb-8 shadow-sm">
-            <div className="mb-6">
-              <h2 className="text-2xl font-headline font-extrabold tracking-tight">Nhu cầu việc làm theo Vai trò</h2>
-              <p className="text-sm text-on-surface-variant">Số lượng tin tuyển dụng theo từng vai trò công nghệ</p>
-            </div>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={roleStats} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
+        <div className="bg-white border border-outline-variant/20 p-4 md:p-8 mb-6 md:mb-8 shadow-sm">
+          <div className="mb-4 md:mb-6">
+            <h2 className="text-xl md:text-2xl font-headline font-extrabold tracking-tight">Nhu cầu việc làm theo Vai trò</h2>
+            <p className="text-sm text-on-surface-variant">Số lượng tin tuyển dụng liên quan theo từng vai trò công nghệ (tính qua kỹ năng liên kết)</p>
+          </div>
+          {roleStats.length > 0 ? (
+            <ResponsiveContainer width="100%" height={Math.max(280, roleStats.length * 28)}>
+              <BarChart data={roleStats} margin={{ top: 5, right: 30, left: 0, bottom: 80 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis
                   dataKey="role"
-                  tick={{ fontSize: 11, fontWeight: 600 }}
-                  angle={-35}
+                  tick={{ fontSize: 10, fontWeight: 600 }}
+                  angle={-40}
                   textAnchor="end"
                   interval={0}
+                  height={80}
                 />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip
@@ -373,14 +378,19 @@ const AnalysisDashboard = () => {
                 <Bar dataKey="job_count" fill="#6366f1" radius={[2, 2, 0, 0]} label={{ position: 'top', fontSize: 10, fontWeight: 700 }} />
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        )}
+          ) : (
+            <div className="text-center p-12 text-zinc-400 italic">
+              <span className="material-symbols-outlined text-4xl mb-2 block opacity-50">bar_chart</span>
+              Không có dữ liệu vai trò. Vui lòng kiểm tra kết nối API.
+            </div>
+          )}
+        </div>
 
         {/* ==================== PHÂN TÍCH LƯƠNG THEO VAI TRÒ ==================== */}
         {roleStats.filter(r => r.avg_min).length > 0 && (
-          <div className="bg-white border border-outline-variant/20 p-8 mb-8 shadow-sm">
-            <div className="mb-6">
-              <h2 className="text-2xl font-headline font-extrabold tracking-tight">Phân tích Lương theo Vai trò</h2>
+          <div className="bg-white border border-outline-variant/20 p-4 md:p-8 mb-6 md:mb-8 shadow-sm">
+            <div className="mb-4 md:mb-6">
+              <h2 className="text-xl md:text-2xl font-headline font-extrabold tracking-tight">Phân tích Lương theo Vai trò</h2>
               <p className="text-sm text-on-surface-variant">Mức lương trung bình (min–max) theo từng vai trò, tính từ tin có số liệu cụ thể</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">

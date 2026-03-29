@@ -140,13 +140,20 @@ const Consulting = () => {
                   </div>
                   <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-200">
                     {filters.skills
-                      .filter(s => {
-                        const matchSearch = s.name.toLowerCase().includes(skillSearch.toLowerCase());
-                        if (!selectedRole || !roleSkillsMap[selectedRole]?.length) return matchSearch;
-                        return matchSearch && roleSkillsMap[selectedRole].includes(s.name);
+                      .filter(s => s.name.toLowerCase().includes(skillSearch.toLowerCase()))
+                      .sort((a, b) => {
+                        // Sort role-related skills to the top
+                        if (selectedRole && roleSkillsMap[selectedRole]?.length) {
+                          const aInRole = roleSkillsMap[selectedRole].includes(a.name);
+                          const bInRole = roleSkillsMap[selectedRole].includes(b.name);
+                          if (aInRole && !bInRole) return -1;
+                          if (!aInRole && bInRole) return 1;
+                        }
+                        return 0;
                       })
                       .map((s) => {
                       const isSelected = selectedSkills.includes(s.name);
+                      const isRoleSkill = selectedRole && roleSkillsMap[selectedRole]?.includes(s.name);
                       return (
                         <button
                           key={s.id}
@@ -154,18 +161,17 @@ const Consulting = () => {
                           className={`px-3 py-1.5 text-xs font-bold transition-all border-b-2 cursor-pointer ${
                             isSelected
                               ? 'bg-primary text-white border-primary shadow-sm'
-                              : 'bg-white text-zinc-500 border-transparent hover:border-zinc-300'
+                              : isRoleSkill
+                                ? 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:border-indigo-400'
+                                : 'bg-white text-zinc-500 border-transparent hover:border-zinc-300'
                           }`}
                         >
+                          {isRoleSkill && <span className="mr-1">★</span>}
                           {s.name}
                         </button>
                       );
                     })}
-                    {filters.skills.filter(s => {
-                      const matchSearch = s.name.toLowerCase().includes(skillSearch.toLowerCase());
-                      if (!selectedRole || !roleSkillsMap[selectedRole]?.length) return matchSearch;
-                      return matchSearch && roleSkillsMap[selectedRole].includes(s.name);
-                    }).length === 0 && (
+                    {filters.skills.filter(s => s.name.toLowerCase().includes(skillSearch.toLowerCase())).length === 0 && (
                       <span className="text-xs text-zinc-400 italic">Không tìm thấy kỹ năng phù hợp.</span>
                     )}
                   </div>

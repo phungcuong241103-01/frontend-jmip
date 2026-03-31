@@ -8,7 +8,7 @@ const Footer = () => {
           JMIP
         </span>
         <p className="font-body text-xs tracking-normal text-zinc-500">
-          © 2024 JMIP Intelligence Grid. Dữ liệu biên tập chính xác.
+          © 2026 JMIP Intelligence Grid. Dữ liệu biên tập chính xác.
         </p>
       </div>
       <nav className="flex gap-8">

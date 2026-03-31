@@ -110,8 +110,8 @@ const Home = () => {
             <span className="text-primary">thị trường IT chính xác.</span>
           </h1>
           <p className="text-lg text-on-surface-variant max-w-2xl mx-auto mb-10 leading-relaxed">
-            JMIP thu thập và phân tích dữ liệu tuyển dụng IT từ các nguồn hàng đầu,
-            giúp bạn nắm bắt xu hướng thị trường, tìm việc phù hợp và phát triển sự nghiệp.
+            JMIP thu thập và phân tích dữ liệu tuyển dụng IT từ các nguồn hàng đầu như ITViec, TopCV, Vietnamworks.
+            Giúp bạn nắm bắt xu hướng thị trường, tìm việc phù hợp và phát triển sự nghiệp.
           </p>
           <div className="bg-surface-container-lowest shadow-[0_24px_48px_rgba(26,28,29,0.06)] p-2 flex flex-col md:flex-row gap-2 border border-outline-variant/10 max-w-2xl mx-auto">
             <div className="flex-1 flex items-center px-4 bg-surface-container-low">
@@ -189,6 +189,7 @@ const Home = () => {
                 onClick={() => {
                   if (i === 0) navigate('/analysis');
                   if (i === 1) navigate('/find-job');
+                  if (i === 2) navigate('/consulting');
                 }}
               >
                 <div className="w-14 h-14 bg-primary/10 flex items-center justify-center mb-6">

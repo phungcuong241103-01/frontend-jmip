@@ -12,9 +12,8 @@ const JobCard = ({ job, isLowest, selectedSkills = [] }) => {
   return (
     <div
       onClick={() => job.url && window.open(job.url, '_blank')}
-      className={`${
-        isLowest ? 'bg-surface-container-lowest' : 'bg-surface-container-low'
-      } p-4 md:p-8 flex flex-col md:flex-row gap-4 md:gap-8 items-start hover:bg-white transition-all group relative border-l-4 border-transparent hover:border-primary cursor-pointer`}
+      className={`${isLowest ? 'bg-surface-container-lowest' : 'bg-surface-container-low'
+        } p-4 md:p-8 flex flex-col md:flex-row gap-4 md:gap-8 items-start hover:bg-white transition-all group relative border-l-4 border-transparent hover:border-primary cursor-pointer`}
     >
       {/* Company icon - hidden on mobile */}
       <div className="hidden md:flex w-16 h-16 bg-zinc-50 items-center justify-center border border-zinc-100 shrink-0">
@@ -25,7 +24,7 @@ const JobCard = ({ job, isLowest, selectedSkills = [] }) => {
       <div className="flex-grow min-w-0">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 mb-2">
           <div className="min-w-0">
-            <h3 className="font-headline font-bold text-base md:text-xl text-zinc-900 group-hover:text-primary transition-colors truncate">
+            <h3 className="font-headline font-bold text-base md:text-xl text-zinc-900 group-hover:text-primary transition-colors line-clamp-2 leading-tight">
               {job.title}
             </h3>
             <p className="font-body text-xs md:text-sm font-semibold text-zinc-600">
@@ -45,11 +44,10 @@ const JobCard = ({ job, isLowest, selectedSkills = [] }) => {
             return (
               <span
                 key={index}
-                className={`px-2 md:px-3 py-0.5 md:py-1 text-[9px] md:text-[10px] font-bold uppercase tracking-wider transition-colors ${
-                  isHighlighted 
-                    ? 'bg-primary text-white shadow-sm' 
+                className={`px-2 md:px-3 py-0.5 md:py-1 text-[9px] md:text-[10px] font-bold uppercase tracking-wider transition-colors ${isHighlighted
+                    ? 'bg-primary text-white shadow-sm'
                     : 'bg-zinc-50 text-zinc-600'
-                }`}
+                  }`}
               >
                 {skill}
               </span>
@@ -60,11 +58,11 @@ const JobCard = ({ job, isLowest, selectedSkills = [] }) => {
               +{skills.length - 6}
             </span>
           )}
-          {job.level_name && (
-            <span className="px-2 md:px-3 py-0.5 md:py-1 bg-orange-50 text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-orange-700">
-              {job.level_name}
+          {job.level_names && job.level_names.length > 0 && job.level_names.map((levelName, idx) => (
+            <span key={`level-${idx}`} className="px-2 md:px-3 py-0.5 md:py-1 bg-orange-50 text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-orange-700">
+              {levelName}
             </span>
-          )}
+          ))}
         </div>
         {/* Source and date row */}
         <div className="flex items-center gap-3 mt-2 md:mt-3">

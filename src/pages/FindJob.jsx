@@ -1,10 +1,195 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import JobCard from '../components/JobCard';
 import { getJobs, getLocations, getLevels, getSkills, getRoles, getAnalyticsRoles } from '../services/api';
 
+// Tách SidebarContent ra ngoài để tránh re-render gây mất focus
+const SidebarContent = ({
+  searchInput,
+  setSearchInput,
+  searchInputRef,
+  handleSearchKeyDown,
+  handleSearchIconClick,
+  selectedRole,
+  handleRoleChange,
+  roles,
+  filters,
+  handleSkillToggle,
+  skillSearch,
+  setSkillSearch,
+  filteredSkills,
+  locations,
+  handleFilterChange,
+  levels,
+  setFilters,
+  setSidebarOpen
+}) => (
+  <div className="p-5 md:p-8 space-y-6 md:space-y-8">
+    <div>
+      <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant block mb-3">
+        Tìm kiếm thông tin
+      </span>
+      <div className="relative">
+        <input
+          ref={searchInputRef}
+          className="w-full bg-surface-container-lowest border-none focus:ring-2 focus:ring-primary h-11 px-4 text-sm font-body placeholder:text-zinc-400 outline-none"
+          placeholder="Từ khóa, Chức danh..."
+          type="text"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          onKeyDown={handleSearchKeyDown}
+        />
+        <button
+          onClick={handleSearchIconClick}
+          className="absolute right-3 top-2.5 text-zinc-400 hover:text-primary transition-colors cursor-pointer"
+          type="button"
+        >
+          <span className="material-symbols-outlined">search</span>
+        </button>
+      </div>
+    </div>
+
+    {/* Role */}
+    <div>
+      <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant block mb-3">
+        Vai trò (Role)
+      </span>
+      <select
+        className="w-full bg-surface-container-lowest border-none focus:ring-2 focus:ring-primary h-11 px-4 text-sm font-body outline-none"
+        value={selectedRole}
+        onChange={(e) => handleRoleChange(e.target.value)}
+      >
+        <option value="">Tất cả vai trò</option>
+        {roles.map((r) => (
+          <option key={r.id} value={r.name}>{r.name}</option>
+        ))}
+      </select>
+    </div>
+
+    {/* Skill Multi-Select */}
+    <div>
+      <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant block mb-3">
+        Kỹ năng cốt lõi
+      </span>
+      {filters.skills.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-3 border-b border-outline-variant/20 pb-3">
+          {filters.skills.map((skillName) => (
+            <span
+              key={skillName}
+              onClick={() => handleSkillToggle(skillName)}
+              className="flex items-center gap-1 bg-primary text-white px-2 py-1 text-[11px] font-bold cursor-pointer rounded-sm hover:opacity-80 transition-opacity"
+            >
+              {skillName} <span className="material-symbols-outlined text-[10px] font-bold">close</span>
+            </span>
+          ))}
+          <span
+            onClick={() => setFilters(prev => ({ ...prev, skills: [], page: 1 }))}
+            className="flex items-center px-2 py-1 text-[11px] font-bold cursor-pointer hover:underline text-zinc-500"
+          >
+            Xóa tất cả
+          </span>
+        </div>
+      )}
+      <div className="relative mb-3">
+        <input
+          type="text"
+          placeholder="Tìm kiếm kỹ năng..."
+          className="w-full bg-surface-container-lowest border border-outline-variant/30 focus:border-primary focus:ring-1 focus:ring-primary h-10 px-3 pr-8 text-sm font-body outline-none transition-all"
+          value={skillSearch}
+          onChange={(e) => setSkillSearch(e.target.value)}
+        />
+        <span className="material-symbols-outlined absolute right-2 top-2.5 text-zinc-400 text-lg">search</span>
+      </div>
+      <div className="flex flex-wrap gap-1.5 max-h-40 md:max-h-48 overflow-y-auto p-1 scrollbar-thin scrollbar-thumb-zinc-200">
+        {filteredSkills.map((skill) => {
+          const isSelected = filters.skills.includes(skill.name);
+          return (
+            <span
+              key={skill.id}
+              onClick={() => handleSkillToggle(skill.name)}
+              className={`px-2.5 py-1 text-xs font-medium cursor-pointer transition-colors border ${
+                isSelected
+                  ? 'bg-primary text-white border-primary shadow-sm'
+                  : 'bg-white border-outline-variant hover:border-primary hover:text-primary'
+              }`}
+            >
+              {skill.name}
+            </span>
+          );
+        })}
+        {filteredSkills.length === 0 && (
+          <span className="text-xs text-zinc-400 italic">Không tìm thấy kỹ năng phù hợp.</span>
+        )}
+      </div>
+    </div>
+
+    {/* Location */}
+    <div>
+      <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant block mb-3">
+        Địa điểm
+      </span>
+      <select
+        className="w-full bg-surface-container-lowest border-none focus:ring-2 focus:ring-primary h-11 px-4 text-sm font-body outline-none"
+        value={filters.location}
+        onChange={(e) => handleFilterChange('location', e.target.value)}
+      >
+        <option value="">Tất cả địa điểm</option>
+        {locations.map((loc) => (
+          <option key={loc.id} value={loc.city}>{loc.city}</option>
+        ))}
+      </select>
+    </div>
+
+    {/* Experience Levels */}
+    <div>
+      <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant block mb-3">
+        Kinh nghiệm (Cấp bậc)
+      </span>
+      <div className="space-y-2.5">
+        {levels.map((level) => (
+          <label key={level.id} className="flex items-center gap-3 cursor-pointer group">
+            <input
+              checked={filters.level === level.name}
+              className="w-4 h-4 border-zinc-300 text-primary focus:ring-primary"
+              type="radio"
+              name="level"
+              onChange={() => handleFilterChange('level', level.name)}
+            />
+            <span className={`text-sm font-medium ${filters.level === level.name ? 'text-zinc-900' : 'text-zinc-600 group-hover:text-zinc-900'}`}>
+              {level.name}
+            </span>
+          </label>
+        ))}
+        <label className="flex items-center gap-3 cursor-pointer group">
+          <input
+            checked={filters.level === ''}
+            className="w-4 h-4 border-zinc-300 text-primary focus:ring-primary"
+            type="radio"
+            name="level"
+            onChange={() => handleFilterChange('level', '')}
+          />
+          <span className={`text-sm font-medium ${filters.level === '' ? 'text-zinc-900' : 'text-zinc-600 group-hover:text-zinc-900'}`}>
+            Tất cả
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <button
+      onClick={() => {
+        setFilters(prev => ({ ...prev, page: 1 }));
+        setSidebarOpen(false);
+      }}
+      className="w-full bg-primary text-white py-3.5 font-headline font-bold tracking-tight hover:bg-primary-container hover:text-on-primary-container transition-all cursor-pointer"
+    >
+      Cập nhật tìm kiếm
+    </button>
+  </div>
+);
+
 const FindJob = () => {
   const [searchParams] = useSearchParams();
+
   const [jobs, setJobs] = useState([]);
   const [locations, setLocations] = useState([]);
   const [levels, setLevels] = useState([]);
@@ -22,6 +207,7 @@ const FindJob = () => {
   });
 
   const [skillSearch, setSkillSearch] = useState('');
+  const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
 
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
@@ -31,29 +217,22 @@ const FindJob = () => {
     page: 1
   });
 
+  const searchInputRef = useRef(null);
+
+  // Fetch metadata
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
         const [locsRes, levsRes, sksRes, rlsRes, analyticsRes] = await Promise.allSettled([
-          getLocations(),
-          getLevels(),
-          getSkills(),
-          getRoles(),
-          getAnalyticsRoles()
+          getLocations(), getLevels(), getSkills(), getRoles(), getAnalyticsRoles()
         ]);
 
-        const locs = locsRes.status === 'fulfilled' ? locsRes.value : [];
-        const levs = levsRes.status === 'fulfilled' ? levsRes.value : [];
-        const sks  = sksRes.status  === 'fulfilled' ? sksRes.value  : [];
-        const rls  = rlsRes.status  === 'fulfilled' ? rlsRes.value  : [];
+        setLocations(Array.isArray(locsRes.value) ? locsRes.value : (locsRes.value?.data || []));
+        setLevels(Array.isArray(levsRes.value) ? levsRes.value : (levsRes.value?.data || []));
+        setSkills(Array.isArray(sksRes.value) ? sksRes.value : (sksRes.value?.data || []));
+        setRoles(Array.isArray(rlsRes.value) ? rlsRes.value : (rlsRes.value?.data || []));
+
         const analyticsRoles = analyticsRes.status === 'fulfilled' ? analyticsRes.value : null;
-
-        setLocations(Array.isArray(locs) ? locs : (locs?.data || []));
-        setLevels(Array.isArray(levs) ? levs : (levs?.data || []));
-        setSkills(Array.isArray(sks) ? sks : (sks?.data || []));
-        setRoles(Array.isArray(rls) ? rls : (rls?.data || []));
-
-        // Build role -> skills mapping from role_skills
         const map = {};
         const rolesData = Array.isArray(analyticsRoles) ? analyticsRoles : (analyticsRoles?.data || []);
         rolesData.forEach(r => {
@@ -67,6 +246,7 @@ const FindJob = () => {
     fetchMetadata();
   }, []);
 
+  // Fetch jobs
   useEffect(() => {
     const fetchJobs = async () => {
       setLoading(true);
@@ -81,7 +261,6 @@ const FindJob = () => {
         };
 
         const data = await getJobs(params);
-
         const jobsData = data?.jobs || data?.data?.jobs || [];
         const paginationData = data?.pagination || data?.data?.pagination || {
           currentPage: 1, totalPages: 1, totalItems: 0, limit: 50
@@ -100,14 +279,17 @@ const FindJob = () => {
     fetchJobs();
   }, [filters]);
 
+  // Đồng bộ khi filters.search thay đổi từ ngoài
+  useEffect(() => {
+    setSearchInput(filters.search);
+  }, [filters.search]);
+
   const handleFilterChange = (name, value) => {
     setFilters(prev => ({ ...prev, [name]: value, page: 1 }));
   };
 
   const handleRoleChange = (roleName) => {
     setSelectedRole(roleName);
-    // Khi chọn role, filter skill list nhưng KHÔNG gửi role param lên API
-    // (vì job không có role_id). Thay vào đó user sẽ chọn skills hiển thị theo role.
     setFilters(prev => ({ ...prev, skills: [], page: 1 }));
     setSkillSearch('');
   };
@@ -127,7 +309,26 @@ const FindJob = () => {
     }
   };
 
-  // Sliding window pagination
+  const performSearch = () => {
+    const trimmed = searchInput.trim();
+    if (trimmed !== filters.search) {
+      setFilters(prev => ({ ...prev, search: trimmed, page: 1 }));
+    }
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      performSearch();
+      searchInputRef.current?.focus();
+    }
+  };
+
+  const handleSearchIconClick = () => {
+    performSearch();
+    searchInputRef.current?.focus();
+  };
+
   const getPageNumbers = () => {
     const { currentPage, totalPages } = pagination;
     const pages = [];
@@ -145,174 +346,15 @@ const FindJob = () => {
     if (rangeStart > 2) pages.push('...');
     for (let i = rangeStart; i <= rangeEnd; i++) pages.push(i);
     if (rangeEnd < totalPages - 1) pages.push('...');
-
     pages.push(totalPages);
     return pages;
   };
 
-  // Filtered skills based on search + selected role
   const filteredSkills = skills.filter(skill => {
     const matchSearch = skill.name.toLowerCase().includes(skillSearch.toLowerCase());
     if (!selectedRole || !roleSkillsMap[selectedRole]?.length) return matchSearch;
     return matchSearch && roleSkillsMap[selectedRole].includes(skill.name);
   });
-
-  // Sidebar content (shared between mobile drawer and desktop sidebar)
-  const SidebarContent = () => (
-    <div className="p-5 md:p-8 space-y-6 md:space-y-8">
-      <div>
-        <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant block mb-3">
-          Tìm kiếm thông tin
-        </span>
-        <div className="relative">
-          <input
-            className="w-full bg-surface-container-lowest border-none focus:ring-2 focus:ring-primary h-11 px-4 text-sm font-body placeholder:text-zinc-400 outline-none"
-            placeholder="Từ khóa, Chức danh..."
-            type="text"
-            value={filters.search}
-            onChange={(e) => handleFilterChange('search', e.target.value)}
-          />
-          <span className="material-symbols-outlined absolute right-3 top-2.5 text-zinc-400">search</span>
-        </div>
-      </div>
-
-      {/* Role */}
-      <div>
-        <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant block mb-3">
-          Vai trò (Role)
-        </span>
-        <select
-          className="w-full bg-surface-container-lowest border-none focus:ring-2 focus:ring-primary h-11 px-4 text-sm font-body outline-none"
-          value={selectedRole}
-          onChange={(e) => handleRoleChange(e.target.value)}
-        >
-          <option value="">Tất cả vai trò</option>
-          {roles.map((r) => (
-            <option key={r.id} value={r.name}>{r.name}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Skill Multi-Select */}
-      <div>
-        <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant block mb-3">
-          Kỹ năng cốt lõi
-        </span>
-        {filters.skills.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-3 border-b border-outline-variant/20 pb-3">
-            {filters.skills.map((skillName) => (
-              <span
-                key={skillName}
-                onClick={() => handleSkillToggle(skillName)}
-                className="flex items-center gap-1 bg-primary text-white px-2 py-1 text-[11px] font-bold cursor-pointer rounded-sm hover:opacity-80 transition-opacity"
-              >
-                {skillName} <span className="material-symbols-outlined text-[10px] font-bold">close</span>
-              </span>
-            ))}
-            <span
-              onClick={() => setFilters(prev => ({ ...prev, skills: [], page: 1 }))}
-              className="flex items-center px-2 py-1 text-[11px] font-bold cursor-pointer hover:underline text-zinc-500"
-            >
-              Xóa tất cả
-            </span>
-          </div>
-        )}
-        <div className="relative mb-3">
-          <input
-            type="text"
-            placeholder="Tìm kiếm kỹ năng..."
-            className="w-full bg-surface-container-lowest border border-outline-variant/30 focus:border-primary focus:ring-1 focus:ring-primary h-10 px-3 pr-8 text-sm font-body outline-none transition-all"
-            value={skillSearch}
-            onChange={(e) => setSkillSearch(e.target.value)}
-          />
-          <span className="material-symbols-outlined absolute right-2 top-2.5 text-zinc-400 text-lg">search</span>
-        </div>
-        <div className="flex flex-wrap gap-1.5 max-h-40 md:max-h-48 overflow-y-auto p-1 scrollbar-thin scrollbar-thumb-zinc-200">
-          {filteredSkills.map((skill) => {
-            const isSelected = filters.skills.includes(skill.name);
-            return (
-              <span
-                key={skill.id}
-                onClick={() => handleSkillToggle(skill.name)}
-                className={`px-2.5 py-1 text-xs font-medium cursor-pointer transition-colors border ${
-                  isSelected
-                    ? 'bg-primary text-white border-primary shadow-sm'
-                    : 'bg-white border-outline-variant hover:border-primary hover:text-primary'
-                }`}
-              >
-                {skill.name}
-              </span>
-            );
-          })}
-          {filteredSkills.length === 0 && (
-            <span className="text-xs text-zinc-400 italic">Không tìm thấy kỹ năng phù hợp.</span>
-          )}
-        </div>
-      </div>
-
-      {/* Location */}
-      <div>
-        <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant block mb-3">
-          Địa điểm
-        </span>
-        <select
-          className="w-full bg-surface-container-lowest border-none focus:ring-2 focus:ring-primary h-11 px-4 text-sm font-body outline-none"
-          value={filters.location}
-          onChange={(e) => handleFilterChange('location', e.target.value)}
-        >
-          <option value="">Tất cả địa điểm</option>
-          {locations.map((loc) => (
-            <option key={loc.id} value={loc.city}>{loc.city}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Experience Levels */}
-      <div>
-        <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant block mb-3">
-          Kinh nghiệm (Cấp bậc)
-        </span>
-        <div className="space-y-2.5">
-          {levels.map((level) => (
-            <label key={level.id} className="flex items-center gap-3 cursor-pointer group">
-              <input
-                checked={filters.level === level.name}
-                className="w-4 h-4 border-zinc-300 text-primary focus:ring-primary"
-                type="radio"
-                name="level"
-                onChange={() => handleFilterChange('level', level.name)}
-              />
-              <span className={`text-sm font-medium ${filters.level === level.name ? 'text-zinc-900' : 'text-zinc-600 group-hover:text-zinc-900'}`}>
-                {level.name}
-              </span>
-            </label>
-          ))}
-          <label className="flex items-center gap-3 cursor-pointer group">
-            <input
-              checked={filters.level === ''}
-              className="w-4 h-4 border-zinc-300 text-primary focus:ring-primary"
-              type="radio"
-              name="level"
-              onChange={() => handleFilterChange('level', '')}
-            />
-            <span className={`text-sm font-medium ${filters.level === '' ? 'text-zinc-900' : 'text-zinc-600 group-hover:text-zinc-900'}`}>
-              Tất cả
-            </span>
-          </label>
-        </div>
-      </div>
-
-      <button
-        onClick={() => {
-          setFilters(prev => ({ ...prev, page: 1 }));
-          setSidebarOpen(false);
-        }}
-        className="w-full bg-primary text-white py-3.5 font-headline font-bold tracking-tight hover:bg-primary-container hover:text-on-primary-container transition-all cursor-pointer"
-      >
-        Cập nhật tìm kiếm
-      </button>
-    </div>
-  );
 
   return (
     <main className="pt-16 min-h-screen flex flex-col md:flex-row">
@@ -337,12 +379,8 @@ const FindJob = () => {
         </button>
       </div>
 
-      {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black/50 z-40"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="md:hidden fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
@@ -352,14 +390,32 @@ const FindJob = () => {
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         md:translate-x-0 md:z-auto
       `}>
-        {/* Mobile close button */}
         <div className="md:hidden flex items-center justify-between px-5 py-3 border-b border-zinc-200">
           <span className="text-sm font-bold uppercase tracking-widest text-zinc-700">Bộ lọc tìm kiếm</span>
           <button onClick={() => setSidebarOpen(false)} className="p-1 cursor-pointer">
             <span className="material-symbols-outlined text-zinc-500">close</span>
           </button>
         </div>
-        <SidebarContent />
+        <SidebarContent
+          searchInput={searchInput}
+          setSearchInput={setSearchInput}
+          searchInputRef={searchInputRef}
+          handleSearchKeyDown={handleSearchKeyDown}
+          handleSearchIconClick={handleSearchIconClick}
+          selectedRole={selectedRole}
+          handleRoleChange={handleRoleChange}
+          roles={roles}
+          filters={filters}
+          handleSkillToggle={handleSkillToggle}
+          skillSearch={skillSearch}
+          setSkillSearch={setSkillSearch}
+          filteredSkills={filteredSkills}
+          locations={locations}
+          handleFilterChange={handleFilterChange}
+          levels={levels}
+          setFilters={setFilters}
+          setSidebarOpen={setSidebarOpen}
+        />
       </aside>
 
       {/* Main Content */}
@@ -389,7 +445,7 @@ const FindJob = () => {
           )}
         </div>
 
-        {/* Pagination — Sliding Window */}
+        {/* Pagination */}
         {pagination.totalPages > 1 && (
           <div className="mt-10 md:mt-16 flex justify-between items-center py-6 md:py-8 border-t border-zinc-100">
             <button
@@ -405,9 +461,7 @@ const FindJob = () => {
             <div className="flex gap-1.5 md:gap-2 items-center">
               {getPageNumbers().map((page, idx) => {
                 if (page === '...') {
-                  return (
-                    <span key={`ellipsis-${idx}`} className="text-zinc-300 font-black text-sm px-1">...</span>
-                  );
+                  return <span key={`ellipsis-${idx}`} className="text-zinc-300 font-black text-sm px-1">...</span>;
                 }
                 return (
                   <span

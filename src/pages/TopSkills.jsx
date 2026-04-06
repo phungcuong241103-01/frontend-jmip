@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getStats } from '../services/api';
+import { useStats } from '../hooks/useQueries';
 
 const TopSkills = () => {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { data: stats, isLoading: loading } = useStats();
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -11,19 +10,6 @@ const TopSkills = () => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
     window.addEventListener('resize', handleResize);
-
-    const fetchStats = async () => {
-      try {
-        const data = await getStats();
-        setStats(data);
-      } catch (err) {
-        console.error('Error fetching stats:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 

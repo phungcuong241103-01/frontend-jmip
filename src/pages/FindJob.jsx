@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import JobCard from '../components/JobCard';
-import { getJobs, getLocations, getLevels, getSkills, getRoles, getAnalyticsRoles } from '../services/api';
+import { useJobs, useLocations, useLevels, useSkills, useRoles, useAnalyticsRoles } from '../hooks/useQueries';
 
 // Tách SidebarContent ra ngoài để tránh re-render gây mất focus
 const SidebarContent = ({
@@ -190,24 +190,10 @@ const SidebarContent = ({
 const FindJob = () => {
   const [searchParams] = useSearchParams();
 
-  const [jobs, setJobs] = useState([]);
-  const [locations, setLocations] = useState([]);
-  const [levels, setLevels] = useState([]);
-  const [skills, setSkills] = useState([]);
-  const [roles, setRoles] = useState([]);
-  const [roleSkillsMap, setRoleSkillsMap] = useState({});
-  const [selectedRole, setSelectedRole] = useState('');
-  const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    limit: 50
-  });
-
   const [skillSearch, setSkillSearch] = useState('');
   const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
+  const [selectedRole, setSelectedRole] = useState('');
 
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
@@ -219,65 +205,43 @@ const FindJob = () => {
 
   const searchInputRef = useRef(null);
 
-  // Fetch metadata
-  useEffect(() => {
-    const fetchMetadata = async () => {
-      try {
-        const [locsRes, levsRes, sksRes, rlsRes, analyticsRes] = await Promise.allSettled([
-          getLocations(), getLevels(), getSkills(), getRoles(), getAnalyticsRoles()
-        ]);
+  // ─── React Query hooks for metadata (cached across navigations) ───────────
+  const { data: locationsRaw = [] } = useLocations();
+  const { data: levelsRaw = [] } = useLevels();
+  const { data: skillsRaw = [] } = useSkills();
+  const { data: rolesRaw = [] } = useRoles();
+  const { data: analyticsRolesRaw } = useAnalyticsRoles();
 
-        setLocations(Array.isArray(locsRes.value) ? locsRes.value : (locsRes.value?.data || []));
-        setLevels(Array.isArray(levsRes.value) ? levsRes.value : (levsRes.value?.data || []));
-        setSkills(Array.isArray(sksRes.value) ? sksRes.value : (sksRes.value?.data || []));
-        setRoles(Array.isArray(rlsRes.value) ? rlsRes.value : (rlsRes.value?.data || []));
+  // Normalize data shapes
+  const locations = useMemo(() => Array.isArray(locationsRaw) ? locationsRaw : (locationsRaw?.data || []), [locationsRaw]);
+  const levels = useMemo(() => Array.isArray(levelsRaw) ? levelsRaw : (levelsRaw?.data || []), [levelsRaw]);
+  const skills = useMemo(() => Array.isArray(skillsRaw) ? skillsRaw : (skillsRaw?.data || []), [skillsRaw]);
+  const roles = useMemo(() => Array.isArray(rolesRaw) ? rolesRaw : (rolesRaw?.data || []), [rolesRaw]);
 
-        const analyticsRoles = analyticsRes.status === 'fulfilled' ? analyticsRes.value : null;
-        const map = {};
-        const rolesData = Array.isArray(analyticsRoles) ? analyticsRoles : (analyticsRoles?.data || []);
-        rolesData.forEach(r => {
-          map[r.role] = r.skills || [];
-        });
-        setRoleSkillsMap(map);
-      } catch (err) {
-        console.error('Error fetching metadata:', err);
-      }
-    };
-    fetchMetadata();
-  }, []);
+  const roleSkillsMap = useMemo(() => {
+    const raw = analyticsRolesRaw;
+    const rolesData = Array.isArray(raw) ? raw : (raw?.data || []);
+    const map = {};
+    rolesData.forEach(r => { map[r.role] = r.skills || []; });
+    return map;
+  }, [analyticsRolesRaw]);
 
-  // Fetch jobs
-  useEffect(() => {
-    const fetchJobs = async () => {
-      setLoading(true);
-      try {
-        const params = {
-          page: filters.page,
-          limit: 50,
-          search: filters.search,
-          location: filters.location,
-          level: filters.level,
-          skills: filters.skills.join(',')
-        };
+  // ─── React Query hook for jobs (filter-dependent, with placeholderData) ───
+  const jobsParams = useMemo(() => ({
+    page: filters.page,
+    limit: 50,
+    search: filters.search,
+    location: filters.location,
+    level: filters.level,
+    skills: filters.skills.join(',')
+  }), [filters]);
 
-        const data = await getJobs(params);
-        const jobsData = data?.jobs || data?.data?.jobs || [];
-        const paginationData = data?.pagination || data?.data?.pagination || {
-          currentPage: 1, totalPages: 1, totalItems: 0, limit: 50
-        };
+  const { data: jobsData, isLoading: loading, isPlaceholderData } = useJobs(jobsParams);
 
-        setJobs(jobsData);
-        setPagination(paginationData);
-      } catch (err) {
-        console.error('Error fetching jobs:', err);
-        setJobs([]);
-        setPagination({ currentPage: 1, totalPages: 1, totalItems: 0, limit: 50 });
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchJobs();
-  }, [filters]);
+  const jobs = jobsData?.jobs || jobsData?.data?.jobs || [];
+  const pagination = jobsData?.pagination || jobsData?.data?.pagination || {
+    currentPage: 1, totalPages: 1, totalItems: 0, limit: 50
+  };
 
   // Đồng bộ khi filters.search thay đổi từ ngoài
   useEffect(() => {
@@ -434,7 +398,7 @@ const FindJob = () => {
         </div>
 
         <div className="grid grid-cols-1 gap-1">
-          {loading ? (
+          {loading && !isPlaceholderData ? (
             <div className="py-20 text-center text-zinc-500 font-medium">Đang tải dữ liệu...</div>
           ) : jobs.length > 0 ? (
             jobs.map((job, index) => (

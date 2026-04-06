@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getStats } from '../services/api';
+import { useStats } from '../hooks/useQueries';
 
 // Component CountUp - Số chạy animation
 const CountUp = ({ end, duration = 2000, suffix = '+' }) => {
@@ -59,24 +59,8 @@ const CountUp = ({ end, duration = 2000, suffix = '+' }) => {
 
 const Home = () => {
   const navigate = useNavigate();
-  const [dbStats, setDbStats] = useState({ 
-    totalJobs: 0, 
-    activeCompanies: 0, 
-    popularSkills: [] 
-  });
+  const { data: dbStats = { totalJobs: 0, activeCompanies: 0, popularSkills: [] } } = useStats();
   const [heroSearch, setHeroSearch] = useState('');
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const data = await getStats();
-        setDbStats(data);
-      } catch (err) {
-        console.error('Failed to fetch stats:', err);
-      }
-    };
-    fetchStats();
-  }, []);
 
   const features = [
     {

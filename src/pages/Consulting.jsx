@@ -1,41 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { getFilters, chatWithAI, getAnalyticsRoles } from '../services/api';
+import React, { useState } from 'react';
+import { useFilters, useAnalyticsRoles, useChatWithAI } from '../hooks/useQueries';
 
 const Consulting = () => {
-  const [filters, setFilters] = useState({ roles: [], levels: [], skills: [] });
-  const [roleSkillsMap, setRoleSkillsMap] = useState({});
+  const { data: filtersData = { roles: [], levels: [], skills: [] } } = useFilters();
+  const { data: analyticsRolesRaw } = useAnalyticsRoles();
+
+  // Build role -> skills mapping from analytics data
+  const roleSkillsMap = React.useMemo(() => {
+    const rolesData = analyticsRolesRaw?.data || (Array.isArray(analyticsRolesRaw) ? analyticsRolesRaw : []);
+    const map = {};
+    rolesData.forEach(r => { map[r.role] = r.skills || []; });
+    return map;
+  }, [analyticsRolesRaw]);
+
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('');
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [advice, setAdvice] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [skillSearch, setSkillSearch] = useState('');
 
-  useEffect(() => {
-    const fetchMetadata = async () => {
-      try {
-        const [filtersData, analyticsRes] = await Promise.allSettled([
-          getFilters(),
-          getAnalyticsRoles()
-        ]);
-        const data = filtersData.status === 'fulfilled' ? filtersData.value : { roles: [], levels: [], skills: [] };
-        setFilters(data);
-        if (data.roles?.length > 0) setSelectedRole(data.roles[0].name);
-        if (data.levels?.length > 0) setSelectedLevel(data.levels[0].name);
+  const chatMutation = useChatWithAI();
 
-        // Build role -> skills mapping
-        if (analyticsRes.status === 'fulfilled') {
-          const rolesData = analyticsRes.value?.data || [];
-          const map = {};
-          rolesData.forEach(r => { map[r.role] = r.skills || []; });
-          setRoleSkillsMap(map);
-        }
-      } catch (err) {
-        console.error('Failed to fetch filters:', err);
-      }
-    };
-    fetchMetadata();
-  }, []);
+  // Auto-select first role/level when data loads
+  React.useEffect(() => {
+    if (filtersData.roles?.length > 0 && !selectedRole) {
+      setSelectedRole(filtersData.roles[0].name);
+    }
+    if (filtersData.levels?.length > 0 && !selectedLevel) {
+      setSelectedLevel(filtersData.levels[0].name);
+    }
+  }, [filtersData, selectedRole, selectedLevel]);
 
   const toggleSkill = (skillName) => {
     if (selectedSkills.includes(skillName)) {
@@ -46,13 +40,12 @@ const Consulting = () => {
   };
 
   const handleGetAdvice = async () => {
-    setLoading(true);
     setAdvice(null);
     try {
       const skillsText = selectedSkills.length > 0 ? selectedSkills.join(', ') : 'chưa có';
       const roleText = selectedRole || 'bất kỳ vị trí IT nào';
       const prompt = `Hiện tại tôi đang quan tâm đến ${roleText}, với những kỹ năng là ${skillsText}. Tôi nên học thêm những gì và dự đoán mức lương nếu tôi theo con đường đó, tính theo VNĐ.`;
-      const data = await chatWithAI(prompt);
+      const data = await chatMutation.mutateAsync(prompt);
       if (data && data.reply) {
         setAdvice({ message: data.reply });
       } else {
@@ -61,8 +54,6 @@ const Consulting = () => {
     } catch (err) {
       console.error('Advice failed:', err);
       setAdvice({ message: 'Lỗi kết nối tới AI. Vui lòng thử lại.' });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -98,7 +89,7 @@ const Consulting = () => {
                   }}
                   className="w-full bg-surface-container-low border-b-2 border-transparent focus:border-primary focus:ring-0 px-6 py-5 text-base font-medium outline-none cursor-pointer transition-all"
                 >
-                  {filters.roles.map((r) => (
+                  {filtersData.roles.map((r) => (
                     <option key={r.id} value={r.name}>{r.name}</option>
                   ))}
                 </select>
@@ -115,7 +106,7 @@ const Consulting = () => {
                   onChange={(e) => setSelectedLevel(e.target.value)}
                   className="w-full bg-surface-container-low border-b-2 border-transparent focus:border-primary focus:ring-0 px-6 py-5 text-base font-medium outline-none cursor-pointer transition-all"
                 >
-                  {filters.levels.map((l) => (
+                  {filtersData.levels.map((l) => (
                     <option key={l.id} value={l.name}>{l.name}</option>
                   ))}
                 </select>
@@ -139,7 +130,7 @@ const Consulting = () => {
                     <span className="material-symbols-outlined absolute right-2 top-2.5 text-zinc-400 text-lg">search</span>
                   </div>
                   <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-200">
-                    {filters.skills
+                    {filtersData.skills
                       .filter(s => s.name.toLowerCase().includes(skillSearch.toLowerCase()))
                       .sort((a, b) => {
                         // Sort role-related skills to the top
@@ -171,7 +162,7 @@ const Consulting = () => {
                         </button>
                       );
                     })}
-                    {filters.skills.filter(s => s.name.toLowerCase().includes(skillSearch.toLowerCase())).length === 0 && (
+                    {filtersData.skills.filter(s => s.name.toLowerCase().includes(skillSearch.toLowerCase())).length === 0 && (
                       <span className="text-xs text-zinc-400 italic">Không tìm thấy kỹ năng phù hợp.</span>
                     )}
                   </div>
@@ -182,10 +173,10 @@ const Consulting = () => {
               <div className="flex justify-center pt-4">
                 <button
                   onClick={handleGetAdvice}
-                  disabled={loading}
+                  disabled={chatMutation.isPending}
                   className="bg-zinc-900 text-white px-12 py-5 font-bold text-sm uppercase tracking-widest hover:bg-primary transition-all cursor-pointer shadow-xl disabled:bg-zinc-400"
                 >
-                  {loading ? 'Đang phân tích...' : 'Nhận tư vấn đa chiều từ AI'}
+                  {chatMutation.isPending ? 'Đang phân tích...' : 'Nhận tư vấn đa chiều từ AI'}
                 </button>
               </div>
             </div>

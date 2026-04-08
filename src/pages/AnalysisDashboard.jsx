@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  getStats, getJobs, getAnalyticsSalaryByRole,
-  getAnalyticsLevels, getAnalyticsTrend, getAnalyticsRoles
-} from '../services/api';
+  useStats, useJobs, useAnalyticsSalaryByRole,
+  useAnalyticsLevels, useAnalyticsTrend, useAnalyticsRoles
+} from '../hooks/useQueries';
 
 // ─── Detect mobile (≤ 640px) ─────────────────────────────────────────────────
 const useIsMobile = () => {
@@ -665,43 +665,29 @@ const AnalysisDashboard = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const [stats, setStats] = useState(null);
-  const [recentJobs, setRecentJobs] = useState([]);
-  const [salaryByRole, setSalaryByRole] = useState([]);
-  const [levelStats, setLevelStats] = useState([]);
-  const [trendData, setTrendData] = useState([]);
-  const [roleStats, setRoleStats] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     injectECharts();
-    const fetchData = async () => {
-      try {
-        const [statsData, jobsData, salaryData, levelsData, trendRes, rolesRes] = await Promise.all([
-          getStats(),
-          getJobs({ limit: 4 }),
-          getAnalyticsSalaryByRole().catch(err => { console.error(err); return { data: [] }; }),
-          getAnalyticsLevels().catch(err => { console.error(err); return { data: [] }; }),
-          getAnalyticsTrend().catch(err => { console.error(err); return { data: [] }; }),
-          getAnalyticsRoles().catch(err => { console.error(err); return { data: [] }; }),
-        ]);
-        setStats(statsData);
-        setRecentJobs(jobsData.jobs || []);
-        setSalaryByRole(salaryData?.data || salaryData || []);
-        setLevelStats(levelsData?.data || levelsData || []);
-        setTrendData((trendRes?.data || trendRes || []).map(d => ({
-          date: new Date(d.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
-          count: d.count,
-        })));
-        setRoleStats(rolesRes?.data || rolesRes || []);
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
   }, []);
+
+  const { data: statsRaw, isLoading: loadingStats } = useStats();
+  const { data: jobsRaw, isLoading: loadingJobs } = useJobs({ limit: 4 });
+  const { data: salaryByRoleRaw } = useAnalyticsSalaryByRole();
+  const { data: levelStatsRaw } = useAnalyticsLevels();
+  const { data: trendDataRaw } = useAnalyticsTrend();
+  const { data: roleStatsRaw } = useAnalyticsRoles();
+
+  const stats = statsRaw || null;
+  const recentJobs = jobsRaw?.jobs || jobsRaw?.data?.jobs || [];
+  const salaryByRole = salaryByRoleRaw?.data || salaryByRoleRaw || [];
+  const levelStats = levelStatsRaw?.data || levelStatsRaw || [];
+  
+  const trendData = (trendDataRaw?.data || trendDataRaw || []).map(d => ({
+    date: new Date(d.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+    count: d.count,
+  }));
+  const roleStats = roleStatsRaw?.data || roleStatsRaw || [];
+
+  const loading = loadingStats || loadingJobs;
 
   if (loading || !stats) {
     return (

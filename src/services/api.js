@@ -94,6 +94,16 @@ export const getAnalyticsRoles = async () => {
   return apiClient.get('/analytics/roles');
 };
 
+// Filtered Analytics (single endpoint, optional role_id)
+export const getFilteredAnalytics = async (params = {}) => {
+  return apiClient.get('/analytics/filtered', { params });
+};
+
+// AI Insights (Groq reads DB data)
+export const getAIInsights = async (params = {}) => {
+  return apiClient.get('/analytics/ai-insights', { params });
+};
+
 // Chat APIs
 export const chatWithAI = async (message) => {
   return apiClient.post('/chat', { message });

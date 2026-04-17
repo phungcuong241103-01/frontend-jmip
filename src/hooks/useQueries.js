@@ -15,6 +15,8 @@ import {
   getAnalyticsSalaryByRole,
   getAnalyticsLevels,
   getAnalyticsRoles,
+  getFilteredAnalytics,
+  getAIInsights,
   chatWithAI,
   predictSalary,
   getLearningAdvice,
@@ -135,6 +137,22 @@ export const useAnalyticsRoles = () =>
   useQuery({
     queryKey: ['analytics', 'roles'],
     queryFn: getAnalyticsRoles,
+    staleTime: STALE_ANALYTICS,
+  });
+
+// ─── Filtered Analytics (single endpoint, role filter) ─────────────────────
+
+export const useFilteredAnalytics = (roleId) =>
+  useQuery({
+    queryKey: ['analytics', 'filtered', roleId || 'all'],
+    queryFn: () => getFilteredAnalytics(roleId ? { role_id: roleId } : {}),
+    staleTime: STALE_ANALYTICS,
+  });
+
+export const useAIInsights = (roleId) =>
+  useQuery({
+    queryKey: ['analytics', 'ai-insights', roleId || 'all'],
+    queryFn: () => getAIInsights(roleId ? { role_id: roleId } : {}),
     staleTime: STALE_ANALYTICS,
   });
 

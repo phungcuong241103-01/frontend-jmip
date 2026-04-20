@@ -140,21 +140,38 @@ export const useAnalyticsRoles = () =>
     staleTime: STALE_ANALYTICS,
   });
 
-// ─── Filtered Analytics (single endpoint, role filter) ─────────────────────
+// ─── Filtered Analytics (single endpoint, multi-filter) ────────────────────
 
-export const useFilteredAnalytics = (roleId) =>
-  useQuery({
-    queryKey: ['analytics', 'filtered', roleId || 'all'],
-    queryFn: () => getFilteredAnalytics(roleId ? { role_id: roleId } : {}),
+export const useFilteredAnalytics = (filters = {}) => {
+  const { roleId, locationId, levelId, skillId } = filters;
+  const params = {};
+  if (roleId) params.role_id = roleId;
+  if (locationId) params.location_id = locationId;
+  if (levelId) params.level_id = levelId;
+  if (skillId) params.skill_id = skillId;
+
+  return useQuery({
+    queryKey: ['analytics', 'filtered', roleId || 'all', locationId || 'all', levelId || 'all', skillId || 'all'],
+    queryFn: () => getFilteredAnalytics(params),
+    staleTime: STALE_ANALYTICS,
+    placeholderData: (previousData) => previousData,
+  });
+};
+
+export const useAIInsights = (filters = {}) => {
+  const { roleId, locationId, levelId, skillId } = filters;
+  const params = {};
+  if (roleId) params.role_id = roleId;
+  if (locationId) params.location_id = locationId;
+  if (levelId) params.level_id = levelId;
+  if (skillId) params.skill_id = skillId;
+
+  return useQuery({
+    queryKey: ['analytics', 'ai-insights', roleId || 'all', locationId || 'all', levelId || 'all', skillId || 'all'],
+    queryFn: () => getAIInsights(params),
     staleTime: STALE_ANALYTICS,
   });
-
-export const useAIInsights = (roleId) =>
-  useQuery({
-    queryKey: ['analytics', 'ai-insights', roleId || 'all'],
-    queryFn: () => getAIInsights(roleId ? { role_id: roleId } : {}),
-    staleTime: STALE_ANALYTICS,
-  });
+};
 
 // ─── Mutations (no caching) ────────────────────────────────────────────────
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useFilteredAnalytics, useAIInsights, useRoles } from '../hooks/useQueries';
+import { useFilteredAnalytics, useAIInsights, useRoles, useLocations, useLevels, useSkills } from '../hooks/useQueries';
+import LoadingOverlay from '../components/LoadingOverlay';
 
 // ─── Detect mobile (≤ 640px) ─────────────────────────────────────────────────
 const useIsMobile = () => {
@@ -554,8 +555,8 @@ const ExperienceChart = ({ data }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // 8. AI INSIGHTS — Groq analysis card
 // ═══════════════════════════════════════════════════════════════════════════════
-const AIInsightsCard = ({ roleId }) => {
-  const { data: raw, isLoading, isFetching } = useAIInsights(roleId);
+const AIInsightsCard = ({ filters }) => {
+  const { data: raw, isLoading, isFetching } = useAIInsights(filters);
   const insights = raw?.data?.insights || raw?.insights || [];
 
   return (
@@ -590,51 +591,76 @@ const AIInsightsCard = ({ roleId }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ROLE FILTER DROPDOWN
+// REUSABLE FILTER DROPDOWN WITH SEARCH
 // ═══════════════════════════════════════════════════════════════════════════════
-const RoleFilter = ({ roles, selectedId, onChange }) => {
+const FilterDropdown = ({ icon, label, items, selectedId, onChange, displayKey = 'name' }) => {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const dropRef = useRef(null);
 
   useEffect(() => {
-    const handler = (e) => { if (dropRef.current && !dropRef.current.contains(e.target)) setOpen(false); };
+    const handler = (e) => { if (dropRef.current && !dropRef.current.contains(e.target)) { setOpen(false); setSearch(''); } };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const selectedRole = roles.find(r => r.id === selectedId);
+  const selected = items.find(r => r.id === selectedId);
+  const filtered = items.filter(r =>
+    (r[displayKey] || '').toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="relative" ref={dropRef}>
       <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-outline-variant hover:border-primary text-xs font-bold transition-colors min-w-[140px]"
+        onClick={() => { setOpen(!open); if (open) setSearch(''); }}
+        className={`flex items-center gap-1.5 px-2.5 py-1.5 bg-white border text-xs font-bold transition-all min-w-0 max-w-[180px]
+          ${selectedId ? 'border-primary/40 bg-primary/5 text-primary shadow-sm' : 'border-outline-variant hover:border-primary text-zinc-700'}`}
       >
-        <span className="material-symbols-outlined text-primary text-sm">filter_list</span>
-        <span className="truncate">{selectedRole ? selectedRole.name : 'Tất cả vai trò'}</span>
-        <span className="material-symbols-outlined text-zinc-400 text-sm ml-auto">{open ? 'expand_less' : 'expand_more'}</span>
+        <span className="material-symbols-outlined text-sm shrink-0">{icon}</span>
+        <span className="truncate">{selected ? selected[displayKey] : label}</span>
+        <span className="material-symbols-outlined text-zinc-400 text-sm ml-auto shrink-0">{open ? 'expand_less' : 'expand_more'}</span>
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-outline-variant shadow-lg z-50 max-h-64 overflow-y-auto">
-          <button
-            onClick={() => { onChange(null); setOpen(false); }}
-            className={`w-full text-left px-3 py-2 text-xs font-bold hover:bg-surface-container transition-colors flex items-center gap-2
-              ${!selectedId ? 'text-primary bg-primary/5' : 'text-zinc-700'}`}
-          >
-            <span className="material-symbols-outlined text-sm">select_all</span>
-            Tất cả vai trò
-          </button>
-          {roles.map(r => (
+        <div className="absolute top-full left-0 mt-1 w-60 bg-white border border-outline-variant shadow-xl z-50 overflow-hidden"
+             style={{ animation: 'fadeIn 0.15s ease-out' }}>
+          {/* Search input */}
+          <div className="p-2 border-b border-zinc-100">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder={`Tìm ${label.toLowerCase().replace('tất cả ', '')}...`}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                autoFocus
+                className="w-full bg-zinc-50 border border-zinc-200 focus:border-primary focus:bg-white h-7 pl-7 pr-2 text-xs font-medium outline-none transition-all rounded-sm placeholder:text-zinc-400"
+              />
+              <span className="material-symbols-outlined absolute left-2 top-1.5 text-zinc-400 text-sm pointer-events-none">search</span>
+            </div>
+          </div>
+          {/* Options list */}
+          <div className="max-h-52 overflow-y-auto">
             <button
-              key={r.id}
-              onClick={() => { onChange(r.id); setOpen(false); }}
-              className={`w-full text-left px-3 py-2 text-xs font-bold hover:bg-surface-container transition-colors
-                ${selectedId === r.id ? 'text-primary bg-primary/5' : 'text-zinc-700'}`}
+              onClick={() => { onChange(null); setOpen(false); setSearch(''); }}
+              className={`w-full text-left px-3 py-2 text-xs font-bold hover:bg-surface-container transition-colors flex items-center gap-2
+                ${!selectedId ? 'text-primary bg-primary/5' : 'text-zinc-700'}`}
             >
-              {r.name}
+              <span className="material-symbols-outlined text-sm">select_all</span>
+              {label}
             </button>
-          ))}
+            {filtered.length > 0 ? filtered.map(r => (
+              <button
+                key={r.id}
+                onClick={() => { onChange(r.id); setOpen(false); setSearch(''); }}
+                className={`w-full text-left px-3 py-2 text-xs font-bold hover:bg-surface-container transition-colors truncate
+                  ${selectedId === r.id ? 'text-primary bg-primary/5' : 'text-zinc-700'}`}
+              >
+                {r[displayKey]}
+              </button>
+            )) : (
+              <div className="px-3 py-3 text-xs text-zinc-400 italic text-center">Không tìm thấy kết quả</div>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -647,15 +673,33 @@ const RoleFilter = ({ roles, selectedId, onChange }) => {
 const AnalysisDashboard = () => {
   const isMobile = useIsMobile();
   const [selectedRoleId, setSelectedRoleId] = useState(null);
+  const [selectedLocationId, setSelectedLocationId] = useState(null);
+  const [selectedLevelId, setSelectedLevelId] = useState(null);
+  const [selectedSkillId, setSelectedSkillId] = useState(null);
 
   useEffect(() => { injectECharts(); }, []);
 
-  // Fetch roles list for filter
+  // Fetch filter options
   const { data: rolesRaw } = useRoles();
-  const rolesList = rolesRaw?.data || rolesRaw || [];
+  const { data: locationsRaw } = useLocations();
+  const { data: levelsRaw } = useLevels();
+  const { data: skillsRaw } = useSkills();
 
-  // Fetch all analytics data in one request (filtered by role)
-  const { data: analyticsRaw, isLoading } = useFilteredAnalytics(selectedRoleId);
+  const rolesList = rolesRaw?.data || rolesRaw || [];
+  const locationsList = locationsRaw?.data || locationsRaw || [];
+  const levelsList = levelsRaw?.data || levelsRaw || [];
+  const skillsList = skillsRaw?.data || skillsRaw || [];
+
+  // Build filters object
+  const filters = {
+    roleId: selectedRoleId,
+    locationId: selectedLocationId,
+    levelId: selectedLevelId,
+    skillId: selectedSkillId,
+  };
+
+  // Fetch all analytics data in one request (multi-filtered)
+  const { data: analyticsRaw, isFetching } = useFilteredAnalytics(filters);
   const analytics = analyticsRaw?.data || analyticsRaw || {};
 
   const totalJobs = analytics.totalJobs || 0;
@@ -670,18 +714,23 @@ const AnalysisDashboard = () => {
   const salaryByLevel = analytics.salaryByLevel || [];
   const levels = analytics.levels || [];
 
-  const selectedRoleName = rolesList.find(r => r.id === selectedRoleId)?.name;
   const topSkill = skills[0];
   const topSalary = roles.reduce((best, r) => (r.avg_max && r.avg_max > (best?.avg_max || 0)) ? r : best, null);
 
-  if (isLoading) {
-    return (
-      <div className="pt-20 flex flex-col items-center justify-center gap-3 text-gray-500 min-h-screen">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="font-bold text-xs">Đang tải dữ liệu phân tích...</p>
-      </div>
-    );
-  }
+  // Active filter badges data
+  const activeFilters = [
+    selectedRoleId && { key: 'role', label: rolesList.find(r => r.id === selectedRoleId)?.name, clear: () => setSelectedRoleId(null), color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+    selectedLocationId && { key: 'location', label: locationsList.find(r => r.id === selectedLocationId)?.city, clear: () => setSelectedLocationId(null), color: 'bg-teal-50 text-teal-700 border-teal-200' },
+    selectedLevelId && { key: 'level', label: levelsList.find(r => r.id === selectedLevelId)?.name, clear: () => setSelectedLevelId(null), color: 'bg-orange-50 text-orange-700 border-orange-200' },
+    selectedSkillId && { key: 'skill', label: skillsList.find(r => r.id === selectedSkillId)?.name, clear: () => setSelectedSkillId(null), color: 'bg-pink-50 text-pink-700 border-pink-200' },
+  ].filter(Boolean);
+
+  const clearAllFilters = () => {
+    setSelectedRoleId(null);
+    setSelectedLocationId(null);
+    setSelectedLevelId(null);
+    setSelectedSkillId(null);
+  };
 
   const kpis = [
     { label: 'Tổng việc làm',  value: totalJobs?.toLocaleString(),    icon: 'work',       accent: 'bg-indigo-50 text-indigo-600' },
@@ -692,10 +741,11 @@ const AnalysisDashboard = () => {
 
   return (
     <div className="flex pt-14 md:pt-16 min-h-screen bg-surface">
+      {isFetching && <LoadingOverlay message="Đang tải dữ liệu phân tích..." />}
       <main className="flex-1 px-3 py-3 md:px-6 md:py-6 max-w-screen-xl mx-auto w-full">
 
-        {/* Header + Filter */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3 md:mb-5">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3 md:mb-4">
           <div>
             <span className="text-[9px] font-bold uppercase tracking-widest text-primary mb-0.5 block">
               Bức tranh CNTT Việt Nam
@@ -704,25 +754,69 @@ const AnalysisDashboard = () => {
               Phân tích Thị trường
             </h1>
           </div>
-          <div className="flex items-center gap-2">
-            <RoleFilter
-              roles={rolesList}
+        </div>
+
+        {/* Filter Bar */}
+        <div className="mb-3 md:mb-4 p-2.5 md:p-3 bg-white border border-outline-variant/30 shadow-sm">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="material-symbols-outlined text-primary text-sm">tune</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Bộ lọc</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <FilterDropdown
+              icon="work_outline"
+              label="Tất cả vai trò"
+              items={rolesList}
               selectedId={selectedRoleId}
               onChange={setSelectedRoleId}
+              displayKey="name"
+            />
+            <FilterDropdown
+              icon="location_on"
+              label="Tất cả địa điểm"
+              items={locationsList.map(l => ({ ...l, name: l.city }))}
+              selectedId={selectedLocationId}
+              onChange={setSelectedLocationId}
+              displayKey="name"
+            />
+            <FilterDropdown
+              icon="trending_up"
+              label="Tất cả cấp bậc"
+              items={levelsList}
+              selectedId={selectedLevelId}
+              onChange={setSelectedLevelId}
+              displayKey="name"
+            />
+            <FilterDropdown
+              icon="psychology"
+              label="Tất cả kỹ năng"
+              items={skillsList}
+              selectedId={selectedSkillId}
+              onChange={setSelectedSkillId}
+              displayKey="name"
             />
           </div>
         </div>
 
-        {/* Active filter badge */}
-        {selectedRoleName && (
-          <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-primary/5 border border-primary/20">
+        {/* Active filter badges */}
+        {activeFilters.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 mb-3 md:mb-4">
             <span className="material-symbols-outlined text-primary text-sm">filter_alt</span>
-            <span className="text-xs font-bold text-primary">Đang lọc: {selectedRoleName}</span>
-            <button onClick={() => setSelectedRoleId(null)}
-              className="ml-auto text-[10px] font-black uppercase tracking-wider text-zinc-500 hover:text-red-500 flex items-center gap-0.5 transition-colors">
-              <span className="material-symbols-outlined text-xs">close</span>
-              Xóa bộ lọc
-            </button>
+            {activeFilters.map(f => (
+              <span key={f.key} className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold border rounded-sm ${f.color}`}>
+                {f.label}
+                <button onClick={f.clear} className="hover:opacity-60 transition-opacity ml-0.5">
+                  <span className="material-symbols-outlined text-[12px]">close</span>
+                </button>
+              </span>
+            ))}
+            {activeFilters.length > 1 && (
+              <button onClick={clearAllFilters}
+                className="text-[10px] font-black uppercase tracking-wider text-zinc-500 hover:text-red-500 flex items-center gap-0.5 transition-colors ml-1">
+                <span className="material-symbols-outlined text-xs">delete_sweep</span>
+                Xóa tất cả
+              </button>
+            )}
           </div>
         )}
 
@@ -746,7 +840,7 @@ const AnalysisDashboard = () => {
 
         {/* AI Insights */}
         <div className="mb-3 md:mb-5">
-          <AIInsightsCard roleId={selectedRoleId} />
+          <AIInsightsCard filters={filters} />
         </div>
 
         {/* Charts — 2 column grid on desktop */}

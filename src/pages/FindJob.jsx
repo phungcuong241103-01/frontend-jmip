@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import JobCard from '../components/JobCard';
+import LoadingOverlay from '../components/LoadingOverlay';
 import { useJobs, useLocations, useLevels, useSkills, useRoles, useAnalyticsRoles } from '../hooks/useQueries';
 
 // Tách SidebarContent ra ngoài để tránh re-render gây mất focus
@@ -397,16 +398,19 @@ const FindJob = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-1">
-          {loading && !isPlaceholderData ? (
-            <div className="py-20 text-center text-zinc-500 font-medium">Đang tải dữ liệu...</div>
-          ) : jobs.length > 0 ? (
+        <div className="grid grid-cols-1 gap-1 relative">
+          {loading && !isPlaceholderData && (
+            <div className="absolute inset-0 z-20 min-h-[320px]">
+              <LoadingOverlay fullScreen={false} message="Đang tải dữ liệu..." />
+            </div>
+          )}
+          {jobs.length > 0 ? (
             jobs.map((job, index) => (
               <JobCard key={job.id} job={job} isLowest={index % 2 === 0} selectedSkills={filters.skills} />
             ))
-          ) : (
+          ) : !loading ? (
             <div className="py-20 text-center text-zinc-500 font-medium">Không tìm thấy việc làm phù hợp.</div>
-          )}
+          ) : null}
         </div>
 
         {/* Pagination */}

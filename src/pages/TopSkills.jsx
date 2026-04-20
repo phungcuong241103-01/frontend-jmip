@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStats } from '../hooks/useQueries';
+import LoadingOverlay from '../components/LoadingOverlay';
 
 const TopSkills = () => {
   const { data: stats, isLoading: loading } = useStats();
@@ -61,10 +62,13 @@ const TopSkills = () => {
             </div>
           </div>
 
-          <div className="divide-y divide-surface-container">
-            {loading ? (
-              <div className="p-10 text-center text-zinc-500">Đang tải xếp hạng kỹ năng...</div>
-            ) : currentSkills.map((skill, index) => {
+          <div className="divide-y divide-surface-container relative">
+            {loading && (
+              <div className="absolute inset-0 z-20 min-h-[240px]">
+                <LoadingOverlay fullScreen={false} message="Đang tải xếp hạng kỹ năng..." />
+              </div>
+            )}
+            {currentSkills.map((skill, index) => {
               const globalRank = (currentPage - 1) * itemsPerPage + index + 1;
               return (
               <div key={skill.name} className="p-6 flex flex-col sm:flex-row sm:items-center gap-4 group hover:bg-surface-container-low transition-colors cursor-pointer">

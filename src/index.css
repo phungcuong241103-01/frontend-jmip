@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-primary: #845400;
   --color-primary-container: #ffb347;
@@ -25,6 +27,42 @@
 
 @layer base {
   body {
-    @apply bg-surface font-body text-on-surface;
+    @apply bg-surface font-body text-on-surface transition-colors duration-300;
+  }
+
+  /* Dark mode overrides */
+  .dark {
+    --color-primary: #ffb347;
+    --color-primary-container: #845400;
+    --color-on-primary: #1a1c1d;
+    --color-secondary: #fed39f;
+    --color-secondary-container: #78582f;
+    --color-tertiary: #52d0f9;
+    --color-tertiary-container: #006780;
+    --color-surface: #111214;
+    --color-surface-container: #1b1c1e;
+    --color-surface-container-low: #161718;
+    --color-surface-container-lowest: #0d0e0f;
+    --color-surface-container-high: #252628;
+    --color-surface-container-highest: #303133;
+    --color-on-surface: #e4e4e6;
+    --color-on-surface-variant: #c4b5a3;
+    --color-outline: #a89880;
+    --color-outline-variant: #4a3f34;
+  }
+
+  /* Smooth transitions for theme change */
+  .dark *,
+  * {
+    transition-property: background-color, border-color;
+    transition-duration: 200ms;
+    transition-timing-function: ease-in-out;
+  }
+
+  /* Override for elements that should NOT animate (charts, etc) */
+  canvas,
+  svg,
+  [data-no-theme-transition] {
+    transition: none !important;
   }
 }

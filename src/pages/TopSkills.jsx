@@ -37,7 +37,7 @@ const TopSkills = () => {
           </div>
         </header>
 
-        <section className="max-w-4xl bg-white border border-surface-container shadow-sm">
+        <section className="max-w-4xl bg-white dark:bg-zinc-900 border border-surface-container shadow-sm transition-colors">
           <div className="p-6 flex flex-wrap gap-3 border-b border-surface-container bg-surface-container-low">
             {skillCategories.map((cat, i) => (
               <button
@@ -73,7 +73,7 @@ const TopSkills = () => {
               return (
               <div key={skill.name} className="p-6 flex flex-col sm:flex-row sm:items-center gap-4 group hover:bg-surface-container-low transition-colors cursor-pointer">
                 <div className="w-12 shrink-0">
-                  <span className="text-xl font-black text-zinc-300">#{globalRank}</span>
+                  <span className="text-xl font-black text-zinc-300 dark:text-zinc-600">#{globalRank}</span>
                 </div>
                 <div className="w-32 flex-shrink-0">
                   <span className="text-base font-bold text-on-surface">{skill.name}</span>
@@ -101,17 +101,17 @@ const TopSkills = () => {
               <button 
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-6 py-2 border border-outline-variant disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold uppercase tracking-widest hover:bg-surface-container transition-colors rounded-sm"
+                className="px-6 py-2 border border-outline-variant disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold uppercase tracking-widest hover:bg-surface-container transition-colors rounded-sm cursor-pointer"
               >
                 Trang trước
               </button>
-              <span className="text-xs font-black text-zinc-600 tracking-widest uppercase">
+              <span className="text-xs font-black text-zinc-600 dark:text-zinc-400 tracking-widest uppercase">
                 Trang {currentPage} / {totalPages}
               </span>
               <button 
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="px-6 py-2 border border-outline-variant disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold uppercase tracking-widest hover:bg-surface-container transition-colors rounded-sm"
+                className="px-6 py-2 border border-outline-variant disabled:opacity-30 disabled:cursor-not-allowed text-sm font-bold uppercase tracking-widest hover:bg-surface-container transition-colors rounded-sm cursor-pointer"
               >
                 Trang sau
               </button>

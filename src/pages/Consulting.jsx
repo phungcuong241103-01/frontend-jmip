@@ -58,7 +58,7 @@ const Consulting = () => {
   };
 
   return (
-    <main className="pt-16 min-h-screen bg-surface pb-20">
+    <main className="pt-16 min-h-screen bg-surface pb-20 transition-colors">
       <div className="p-8 lg:px-12 max-w-4xl mx-auto">
         {/* Header Section */}
         <div className="mb-12 text-center">
@@ -72,7 +72,7 @@ const Consulting = () => {
 
         <div className="space-y-8">
           {/* Main Form Section */}
-          <section className="bg-white p-8 lg:p-10 shadow-[0_24px_48px_rgba(26,28,29,0.06)] border border-outline-variant/10">
+          <section className="bg-white dark:bg-zinc-900 p-8 lg:p-10 shadow-[0_24px_48px_rgba(26,28,29,0.06)] dark:shadow-[0_24px_48px_rgba(0,0,0,0.3)] border border-outline-variant/10 transition-colors">
             <div className="space-y-10">
               {/* Row 1: Role */}
               <div className="space-y-4">
@@ -87,7 +87,7 @@ const Consulting = () => {
                     setSelectedSkills([]);
                     setSkillSearch('');
                   }}
-                  className="w-full bg-surface-container-low border-b-2 border-transparent focus:border-primary focus:ring-0 px-6 py-5 text-base font-medium outline-none cursor-pointer transition-all"
+                  className="w-full bg-surface-container-low border-b-2 border-transparent focus:border-primary focus:ring-0 px-6 py-5 text-base font-medium outline-none cursor-pointer transition-all text-on-surface"
                 >
                   {filtersData.roles.map((r) => (
                     <option key={r.id} value={r.name}>{r.name}</option>
@@ -104,7 +104,7 @@ const Consulting = () => {
                 <select 
                   value={selectedLevel}
                   onChange={(e) => setSelectedLevel(e.target.value)}
-                  className="w-full bg-surface-container-low border-b-2 border-transparent focus:border-primary focus:ring-0 px-6 py-5 text-base font-medium outline-none cursor-pointer transition-all"
+                  className="w-full bg-surface-container-low border-b-2 border-transparent focus:border-primary focus:ring-0 px-6 py-5 text-base font-medium outline-none cursor-pointer transition-all text-on-surface"
                 >
                   {filtersData.levels.map((l) => (
                     <option key={l.id} value={l.name}>{l.name}</option>
@@ -123,13 +123,13 @@ const Consulting = () => {
                     <input
                       type="text"
                       placeholder="Tìm kiếm kỹ năng..."
-                      className="w-full bg-white border border-outline-variant/30 focus:border-primary focus:ring-1 focus:ring-primary h-10 px-3 pr-8 text-sm font-body outline-none transition-all"
+                      className="w-full bg-white dark:bg-zinc-800 border border-outline-variant/30 focus:border-primary focus:ring-1 focus:ring-primary h-10 px-3 pr-8 text-sm font-body outline-none transition-all text-on-surface"
                       value={skillSearch}
                       onChange={(e) => setSkillSearch(e.target.value)}
                     />
                     <span className="material-symbols-outlined absolute right-2 top-2.5 text-zinc-400 text-lg">search</span>
                   </div>
-                  <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-200">
+                  <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-700">
                     {filtersData.skills
                       .filter(s => s.name.toLowerCase().includes(skillSearch.toLowerCase()))
                       .sort((a, b) => {
@@ -151,10 +151,10 @@ const Consulting = () => {
                           onClick={() => toggleSkill(s.name)}
                           className={`px-3 py-1.5 text-xs font-bold transition-all border-b-2 cursor-pointer ${
                             isSelected
-                              ? 'bg-primary text-white border-primary shadow-sm'
+                              ? 'bg-primary text-on-primary border-primary shadow-sm'
                               : isRoleSkill
-                                ? 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:border-indigo-400'
-                                : 'bg-white text-zinc-500 border-transparent hover:border-zinc-300'
+                                ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700 hover:border-indigo-400'
+                                : 'bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border-transparent hover:border-zinc-300 dark:hover:border-zinc-600'
                           }`}
                         >
                           {isRoleSkill && <span className="mr-1">★</span>}
@@ -174,7 +174,7 @@ const Consulting = () => {
                 <button
                   onClick={handleGetAdvice}
                   disabled={chatMutation.isPending}
-                  className="bg-zinc-900 text-white px-12 py-5 font-bold text-sm uppercase tracking-widest hover:bg-primary transition-all cursor-pointer shadow-xl disabled:bg-zinc-400"
+                  className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-12 py-5 font-bold text-sm uppercase tracking-widest hover:bg-primary dark:hover:bg-primary dark:hover:text-on-primary transition-all cursor-pointer shadow-xl disabled:bg-zinc-400 dark:disabled:bg-zinc-600"
                 >
                   {chatMutation.isPending ? 'Đang phân tích...' : 'Nhận tư vấn đa chiều từ AI'}
                 </button>
@@ -188,7 +188,7 @@ const Consulting = () => {
                   <div className="bg-primary/5 p-8 border-l-4 border-primary animate-in fade-in slide-in-from-bottom-4">
                     <div className="flex items-start gap-4">
                       <div className="w-10 h-10 bg-primary flex items-center justify-center shrink-0">
-                        <span className="material-symbols-outlined text-white">smart_toy</span>
+                        <span className="material-symbols-outlined text-on-primary">smart_toy</span>
                       </div>
                       <div className="space-y-4">
                         <p className="font-body text-on-surface leading-relaxed font-medium whitespace-pre-wrap">
@@ -197,7 +197,7 @@ const Consulting = () => {
                         {advice.suggestions && advice.suggestions.length > 0 && (
                           <div className="flex flex-wrap gap-2">
                             {advice.suggestions.map((s) => (
-                              <span key={s} className="bg-white px-4 py-2 text-sm font-black text-primary border border-primary/20 shadow-sm">
+                              <span key={s} className="bg-white dark:bg-zinc-800 px-4 py-2 text-sm font-black text-primary border border-primary/20 shadow-sm">
                                 {s}
                               </span>
                             ))}

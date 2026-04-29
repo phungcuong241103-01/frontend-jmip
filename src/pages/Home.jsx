@@ -83,7 +83,7 @@ const Home = () => {
   return (
     <main className="pt-16">
       {/* Hero Section */}
-      <section className="bg-white pt-24 pb-20 px-8 flex flex-col items-center relative overflow-hidden">
+      <section className="bg-white dark:bg-zinc-900 pt-24 pb-20 px-8 flex flex-col items-center relative overflow-hidden transition-colors">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/3 to-transparent pointer-events-none"></div>
         <div className="max-w-4xl w-full text-center relative z-10">
           <span className="text-[11px] font-bold uppercase tracking-widest text-primary mb-4 block">
@@ -97,11 +97,11 @@ const Home = () => {
             JMIP thu thập và phân tích dữ liệu tuyển dụng IT từ các nguồn hàng đầu như ITViec, TopCV, Vietnamworks.
             Giúp bạn nắm bắt xu hướng thị trường, tìm việc phù hợp và phát triển sự nghiệp.
           </p>
-          <div className="bg-surface-container-lowest shadow-[0_24px_48px_rgba(26,28,29,0.06)] p-2 flex flex-col md:flex-row gap-2 border border-outline-variant/10 max-w-2xl mx-auto">
+          <div className="bg-surface-container-lowest shadow-[0_24px_48px_rgba(26,28,29,0.06)] dark:shadow-[0_24px_48px_rgba(0,0,0,0.3)] p-2 flex flex-col md:flex-row gap-2 border border-outline-variant/10 max-w-2xl mx-auto">
             <div className="flex-1 flex items-center px-4 bg-surface-container-low">
               <span className="material-symbols-outlined text-on-surface-variant mr-3">search</span>
               <input
-                className="w-full bg-transparent border-none py-4 focus:ring-0 text-lg outline-none"
+                className="w-full bg-transparent border-none py-4 focus:ring-0 text-lg outline-none text-on-surface"
                 placeholder="Vị trí, từ khóa..."
                 type="text"
                 value={heroSearch}
@@ -128,7 +128,7 @@ const Home = () => {
       </section>
 
       {/* Stats Row - Số chạy animation */}
-      <section id="stats-section" className="bg-zinc-900 py-12 px-8">
+      <section id="stats-section" className="bg-zinc-900 dark:bg-zinc-950 py-12 px-8">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
           <div>
             <CountUp 
@@ -155,7 +155,7 @@ const Home = () => {
       </section>
 
       {/* Features Section */}
-      <section className="px-8 py-20 bg-surface">
+      <section className="px-8 py-20 bg-surface transition-colors">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3 block">
@@ -191,22 +191,22 @@ const Home = () => {
       {/* CTA Section */}
       <section className="bg-primary py-16 px-8 text-center">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-headline font-extrabold text-white tracking-tight mb-4">
+          <h2 className="text-3xl md:text-4xl font-headline font-extrabold text-white dark:text-zinc-900 tracking-tight mb-4">
             Sẵn sàng khám phá thị trường IT?
           </h2>
-          <p className="text-white/80 text-lg mb-8">
+          <p className="text-white/80 dark:text-zinc-900/70 text-lg mb-8">
             Bắt đầu phân tích ngay hôm nay và đón đầu xu hướng công nghệ.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => navigate('/analysis')}
-              className="bg-white text-primary font-bold px-10 py-4 hover:shadow-lg transition-all cursor-pointer"
+              className="bg-white dark:bg-zinc-900 text-primary font-bold px-10 py-4 hover:shadow-lg transition-all cursor-pointer"
             >
               Xem Dashboard Phân tích
             </button>
             <button
               onClick={() => navigate('/find-job')}
-              className="border-2 border-white text-white font-bold px-10 py-4 hover:bg-white/10 transition-all cursor-pointer"
+              className="border-2 border-white dark:border-zinc-900 text-white dark:text-zinc-900 font-bold px-10 py-4 hover:bg-white/10 dark:hover:bg-zinc-900/10 transition-all cursor-pointer"
             >
               Tìm việc làm
             </button>

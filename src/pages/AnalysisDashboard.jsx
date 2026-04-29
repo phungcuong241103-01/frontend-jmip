@@ -76,7 +76,7 @@ const trunc = (str, max) => str?.length > max ? str.slice(0, max) + '…' : (str
 
 // ─── Shared UI components ─────────────────────────────────────────────────────
 const Card = ({ children, className = '' }) => (
-  <div className={`bg-white border border-outline-variant/20 shadow-sm ${className}`}>
+  <div className={`bg-white dark:bg-zinc-900 border border-outline-variant/20 shadow-sm transition-colors ${className}`}>
     {children}
   </div>
 );
@@ -94,7 +94,7 @@ const CardHeader = ({ title, subtitle, right }) => (
 const SearchInput = ({ value, onChange, placeholder = 'Tìm kiếm...' }) => (
   <div className="relative">
     <input type="text" placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)}
-      className="w-full bg-surface-container-lowest border-b-2 border-zinc-200 focus:border-primary h-8 pl-3 pr-8 text-xs font-bold outline-none transition-all placeholder:font-normal" />
+      className="w-full bg-surface-container-lowest border-b-2 border-zinc-200 dark:border-zinc-700 focus:border-primary h-8 pl-3 pr-8 text-xs font-bold outline-none transition-all placeholder:font-normal text-on-surface" />
     <span className="material-symbols-outlined absolute right-2 top-1.5 text-zinc-400 text-[16px] pointer-events-none">search</span>
   </div>
 );
@@ -102,14 +102,14 @@ const SearchInput = ({ value, onChange, placeholder = 'Tìm kiếm...' }) => (
 const Pagination = ({ page, total, onChange }) => {
   if (total <= 1) return null;
   return (
-    <div className="flex justify-center items-center gap-1 mt-2 pt-2 border-t border-zinc-100">
+    <div className="flex justify-center items-center gap-1 mt-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
       <button onClick={() => onChange(0)} disabled={page === 0}
         className="w-6 h-6 flex items-center justify-center text-[10px] font-black border border-outline-variant disabled:opacity-30 hover:bg-surface-container rounded-sm">«</button>
       <button onClick={() => onChange(Math.max(0, page - 1))} disabled={page === 0}
         className="w-6 h-6 flex items-center justify-center border border-outline-variant disabled:opacity-30 hover:bg-surface-container rounded-sm">
         <span className="material-symbols-outlined text-xs">chevron_left</span>
       </button>
-      <span className="text-[10px] font-black text-zinc-500 tracking-widest uppercase min-w-[48px] text-center">
+      <span className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 tracking-widest uppercase min-w-[48px] text-center">
         {page + 1}/{total}
       </span>
       <button onClick={() => onChange(Math.min(total - 1, page + 1))} disabled={page === total - 1}
@@ -560,7 +560,7 @@ const AIInsightsCard = ({ filters }) => {
   const insights = raw?.data?.insights || raw?.insights || [];
 
   return (
-    <Card className="border-primary/30 bg-gradient-to-br from-indigo-50/60 to-white">
+    <Card className="border-primary/30 bg-gradient-to-br from-indigo-50/60 dark:from-indigo-950/30 to-white dark:to-zinc-900">
       <CardHeader
         title={<span className="flex items-center gap-1.5">
           <span className="material-symbols-outlined text-primary text-lg">auto_awesome</span>
@@ -577,7 +577,7 @@ const AIInsightsCard = ({ filters }) => {
         ) : insights.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {insights.map((insight, i) => (
-              <div key={i} className="bg-white/80 border border-indigo-100 px-3 py-2.5 text-xs leading-relaxed text-zinc-700 font-medium hover:shadow-sm transition-shadow">
+              <div key={i} className="bg-white/80 dark:bg-zinc-800/80 border border-indigo-100 dark:border-indigo-900/50 px-3 py-2.5 text-xs leading-relaxed text-zinc-700 dark:text-zinc-300 font-medium hover:shadow-sm transition-shadow">
                 {insight}
               </div>
             ))}
@@ -613,8 +613,8 @@ const FilterDropdown = ({ icon, label, items, selectedId, onChange, displayKey =
     <div className="relative" ref={dropRef}>
       <button
         onClick={() => { setOpen(!open); if (open) setSearch(''); }}
-        className={`flex items-center gap-1.5 px-2.5 py-1.5 bg-white border text-xs font-bold transition-all min-w-0 max-w-[180px]
-          ${selectedId ? 'border-primary/40 bg-primary/5 text-primary shadow-sm' : 'border-outline-variant hover:border-primary text-zinc-700'}`}
+        className={`flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-zinc-800 border text-xs font-bold transition-all min-w-0 max-w-[180px]
+          ${selectedId ? 'border-primary/40 bg-primary/5 text-primary shadow-sm' : 'border-outline-variant hover:border-primary text-zinc-700 dark:text-zinc-300'}`}
       >
         <span className="material-symbols-outlined text-sm shrink-0">{icon}</span>
         <span className="truncate">{selected ? selected[displayKey] : label}</span>
@@ -622,7 +622,7 @@ const FilterDropdown = ({ icon, label, items, selectedId, onChange, displayKey =
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-1 w-60 bg-white border border-outline-variant shadow-xl z-50 overflow-hidden"
+        <div className="absolute top-full left-0 mt-1 w-60 bg-white dark:bg-zinc-800 border border-outline-variant shadow-xl z-50 overflow-hidden"
              style={{ animation: 'fadeIn 0.15s ease-out' }}>
           {/* Search input */}
           <div className="p-2 border-b border-zinc-100">
@@ -633,7 +633,7 @@ const FilterDropdown = ({ icon, label, items, selectedId, onChange, displayKey =
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 autoFocus
-                className="w-full bg-zinc-50 border border-zinc-200 focus:border-primary focus:bg-white h-7 pl-7 pr-2 text-xs font-medium outline-none transition-all rounded-sm placeholder:text-zinc-400"
+                className="w-full bg-zinc-50 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 focus:border-primary focus:bg-white dark:focus:bg-zinc-700 h-7 pl-7 pr-2 text-xs font-medium outline-none transition-all rounded-sm placeholder:text-zinc-400 text-on-surface"
               />
               <span className="material-symbols-outlined absolute left-2 top-1.5 text-zinc-400 text-sm pointer-events-none">search</span>
             </div>
@@ -643,7 +643,7 @@ const FilterDropdown = ({ icon, label, items, selectedId, onChange, displayKey =
             <button
               onClick={() => { onChange(null); setOpen(false); setSearch(''); }}
               className={`w-full text-left px-3 py-2 text-xs font-bold hover:bg-surface-container transition-colors flex items-center gap-2
-                ${!selectedId ? 'text-primary bg-primary/5' : 'text-zinc-700'}`}
+                ${!selectedId ? 'text-primary bg-primary/5' : 'text-zinc-700 dark:text-zinc-300'}`}
             >
               <span className="material-symbols-outlined text-sm">select_all</span>
               {label}
@@ -653,7 +653,7 @@ const FilterDropdown = ({ icon, label, items, selectedId, onChange, displayKey =
                 key={r.id}
                 onClick={() => { onChange(r.id); setOpen(false); setSearch(''); }}
                 className={`w-full text-left px-3 py-2 text-xs font-bold hover:bg-surface-container transition-colors truncate
-                  ${selectedId === r.id ? 'text-primary bg-primary/5' : 'text-zinc-700'}`}
+                  ${selectedId === r.id ? 'text-primary bg-primary/5' : 'text-zinc-700 dark:text-zinc-300'}`}
               >
                 {r[displayKey]}
               </button>
@@ -757,7 +757,7 @@ const AnalysisDashboard = () => {
         </div>
 
         {/* Filter Bar */}
-        <div className="mb-3 md:mb-4 p-2.5 md:p-3 bg-white border border-outline-variant/30 shadow-sm">
+        <div className="mb-3 md:mb-4 p-2.5 md:p-3 bg-white dark:bg-zinc-900 border border-outline-variant/30 shadow-sm transition-colors">
           <div className="flex items-center gap-1.5 mb-2">
             <span className="material-symbols-outlined text-primary text-sm">tune</span>
             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Bộ lọc</span>

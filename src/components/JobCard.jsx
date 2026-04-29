@@ -13,27 +13,27 @@ const JobCard = ({ job, isLowest, selectedSkills = [] }) => {
     <div
       onClick={() => job.url && window.open(job.url, '_blank')}
       className={`${isLowest ? 'bg-surface-container-lowest' : 'bg-surface-container-low'
-        } p-4 md:p-8 flex flex-col md:flex-row gap-4 md:gap-8 items-start hover:bg-white transition-all group relative border-l-4 border-transparent hover:border-primary cursor-pointer`}
+        } p-4 md:p-8 flex flex-col md:flex-row gap-4 md:gap-8 items-start hover:bg-white dark:hover:bg-zinc-800 transition-all group relative border-l-4 border-transparent hover:border-primary cursor-pointer`}
     >
       {/* Company icon - hidden on mobile */}
-      <div className="hidden md:flex w-16 h-16 bg-zinc-50 items-center justify-center border border-zinc-100 shrink-0">
-        <span className="material-symbols-outlined text-zinc-300 text-3xl">
+      <div className="hidden md:flex w-16 h-16 bg-zinc-50 dark:bg-zinc-800 items-center justify-center border border-zinc-100 dark:border-zinc-700 shrink-0">
+        <span className="material-symbols-outlined text-zinc-300 dark:text-zinc-600 text-3xl">
           domain
         </span>
       </div>
       <div className="flex-grow min-w-0">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 mb-2">
           <div className="min-w-0">
-            <h3 className="font-headline font-bold text-base md:text-xl text-zinc-900 group-hover:text-primary transition-colors line-clamp-2 leading-tight">
+            <h3 className="font-headline font-bold text-base md:text-xl text-zinc-900 dark:text-zinc-100 group-hover:text-primary transition-colors line-clamp-2 leading-tight">
               {job.title}
             </h3>
-            <p className="font-body text-xs md:text-sm font-semibold text-zinc-600">
+            <p className="font-body text-xs md:text-sm font-semibold text-zinc-600 dark:text-zinc-400">
               {company} • {location}
             </p>
           </div>
           {/* Salary inline on mobile */}
           <div className="shrink-0 sm:text-right mt-1 sm:mt-0">
-            <div className="text-lg md:text-2xl font-headline font-black text-zinc-900 tracking-tighter">
+            <div className="text-lg md:text-2xl font-headline font-black text-zinc-900 dark:text-zinc-100 tracking-tighter">
               {salary}
             </div>
           </div>
@@ -45,8 +45,8 @@ const JobCard = ({ job, isLowest, selectedSkills = [] }) => {
               <span
                 key={index}
                 className={`px-2 md:px-3 py-0.5 md:py-1 text-[9px] md:text-[10px] font-bold uppercase tracking-wider transition-colors ${isHighlighted
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'bg-zinc-50 text-zinc-600'
+                    ? 'bg-primary text-on-primary shadow-sm'
+                    : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
                   }`}
               >
                 {skill}
@@ -59,7 +59,7 @@ const JobCard = ({ job, isLowest, selectedSkills = [] }) => {
             </span>
           )}
           {job.level_names && job.level_names.length > 0 && job.level_names.map((levelName, idx) => (
-            <span key={`level-${idx}`} className="px-2 md:px-3 py-0.5 md:py-1 bg-orange-50 text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-orange-700">
+            <span key={`level-${idx}`} className="px-2 md:px-3 py-0.5 md:py-1 bg-orange-50 dark:bg-amber-900/30 text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-orange-700 dark:text-amber-400">
               {levelName}
             </span>
           ))}

@@ -61,25 +61,25 @@ const ChatWidget = () => {
       {!isOpen ? (
         <button
           onClick={() => setIsOpen(true)}
-          className="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-pointer"
+          className="w-14 h-14 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-pointer"
         >
           <span className="material-symbols-outlined text-3xl">chat</span>
         </button>
       ) : (
-        <div className="w-80 sm:w-96 bg-white border border-outline-variant/20 shadow-xl rounded-t-xl rounded-bl-xl overflow-hidden flex flex-col h-[500px]">
+        <div className="w-80 sm:w-96 bg-white dark:bg-zinc-900 border border-outline-variant/20 dark:border-zinc-700 shadow-xl rounded-t-xl rounded-bl-xl overflow-hidden flex flex-col h-[500px]">
           {/* Header */}
-          <div className="bg-primary p-4 flex justify-between items-center text-white">
+          <div className="bg-primary p-4 flex justify-between items-center text-on-primary">
             <div className="flex flex-col">
               <span className="font-headline font-bold">JMIP Assistant</span>
               <span className="text-[10px] tracking-widest uppercase">NgocAI Powered</span>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-white hover:text-zinc-200 cursor-pointer">
+            <button onClick={() => setIsOpen(false)} className="text-on-primary hover:opacity-70 cursor-pointer">
               <span className="material-symbols-outlined">close</span>
             </button>
             <button
               onClick={() => { setMessages([DEFAULT_MSG]); localStorage.removeItem(STORAGE_KEY); }}
               title="Xóa lịch sử"
-              className="text-white/60 hover:text-white cursor-pointer ml-1"
+              className="text-on-primary/60 hover:text-on-primary cursor-pointer ml-1"
             >
               <span className="material-symbols-outlined text-lg">delete_sweep</span>
             </button>
@@ -92,7 +92,7 @@ const ChatWidget = () => {
                 <div
                   className={`max-w-[80%] p-3 text-sm ${
                     m.role === 'user'
-                      ? 'bg-primary text-white rounded-l-xl rounded-br-xl'
+                      ? 'bg-primary text-on-primary rounded-l-xl rounded-br-xl'
                       : 'bg-surface-container-low text-on-surface rounded-r-xl rounded-bl-xl'
                   } shadow-sm whitespace-pre-wrap`}
                 >
@@ -111,20 +111,20 @@ const ChatWidget = () => {
           </div>
 
           {/* Input Area */}
-          <div className="p-3 bg-white border-t border-outline-variant/10 flex gap-2">
+          <div className="p-3 bg-white dark:bg-zinc-900 border-t border-outline-variant/10 dark:border-zinc-700 flex gap-2">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Nhập câu hỏi của bạn..."
-              className="flex-1 bg-surface-container-low px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-primary rounded-md"
+              className="flex-1 bg-surface-container-low px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-primary rounded-md text-on-surface"
               disabled={loading}
             />
             <button
               onClick={handleSend}
               disabled={loading || !input.trim()}
-              className="w-10 h-10 bg-primary text-white flex items-center justify-center rounded-md disabled:bg-zinc-300 disabled:cursor-not-allowed cursor-pointer"
+              className="w-10 h-10 bg-primary text-on-primary flex items-center justify-center rounded-md disabled:bg-zinc-300 dark:disabled:bg-zinc-700 disabled:cursor-not-allowed cursor-pointer"
             >
               <span className="material-symbols-outlined text-lg">send</span>
             </button>

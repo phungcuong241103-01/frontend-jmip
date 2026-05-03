@@ -75,49 +75,58 @@ const formatVND = (v) => {
 const trunc = (str, max) => str?.length > max ? str.slice(0, max) + '…' : (str || '');
 
 // ─── Shared UI components ─────────────────────────────────────────────────────
-const Card = ({ children, className = '' }) => (
-  <div className={`bg-white dark:bg-zinc-900 border border-outline-variant/20 shadow-sm transition-colors ${className}`}>
+const Card = ({ children, className = '', fill = false }) => (
+  <div className={`bg-white dark:bg-zinc-900 border border-outline-variant/20 shadow-sm transition-colors ${fill ? 'h-full flex flex-col' : ''} ${className}`}>
     {children}
   </div>
 );
 
-const CardHeader = ({ title, subtitle, right }) => (
-  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-1.5 px-4 pt-3 pb-0 md:px-5 md:pt-4">
-    <div className="min-w-0">
-      <h2 className="text-sm md:text-lg font-headline font-extrabold tracking-tight leading-tight">{title}</h2>
-      {subtitle && <p className="text-[10px] md:text-xs text-on-surface-variant mt-0.5 leading-snug">{subtitle}</p>}
+const CardHeader = ({ title, subtitle, right, compact = false, onExpand }) => (
+  <div className={`flex sm:items-center justify-between gap-1 ${compact ? 'px-2.5 pt-1.5 pb-0' : 'px-4 pt-3 pb-0 md:px-5 md:pt-4'}`}>
+    <div className="min-w-0 flex-1">
+      <h2 className={`font-headline font-extrabold tracking-tight leading-tight ${compact ? 'text-[11px]' : 'text-sm md:text-lg'}`}>{title}</h2>
+      {subtitle && <p className={`text-on-surface-variant leading-snug ${compact ? 'text-[8px] mt-0' : 'text-[10px] md:text-xs mt-0.5'}`}>{subtitle}</p>}
     </div>
-    {right && <div className="shrink-0 mt-0.5 sm:mt-0">{right}</div>}
+    <div className="flex items-center gap-1 shrink-0">
+      {right}
+      {onExpand && (
+        <button onClick={onExpand} title="Phóng to" className="w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-primary hover:bg-primary/10 rounded transition-all cursor-pointer">
+          <span className="material-symbols-outlined text-[14px]">open_in_full</span>
+        </button>
+      )}
+    </div>
   </div>
 );
 
-const SearchInput = ({ value, onChange, placeholder = 'Tìm kiếm...' }) => (
+const SearchInput = ({ value, onChange, placeholder = 'Tìm kiếm...', compact = false }) => (
   <div className="relative">
     <input type="text" placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)}
-      className="w-full bg-surface-container-lowest border-b-2 border-zinc-200 dark:border-zinc-700 focus:border-primary h-8 pl-3 pr-8 text-xs font-bold outline-none transition-all placeholder:font-normal text-on-surface" />
-    <span className="material-symbols-outlined absolute right-2 top-1.5 text-zinc-400 text-[16px] pointer-events-none">search</span>
+      className={`w-full bg-surface-container-lowest border-b-2 border-zinc-200 dark:border-zinc-700 focus:border-primary font-bold outline-none transition-all placeholder:font-normal text-on-surface ${compact ? 'h-6 pl-2 pr-6 text-[10px]' : 'h-8 pl-3 pr-8 text-xs'}`} />
+    <span className={`material-symbols-outlined absolute text-zinc-400 pointer-events-none ${compact ? 'right-1.5 top-1 text-[12px]' : 'right-2 top-1.5 text-[16px]'}`}>search</span>
   </div>
 );
 
-const Pagination = ({ page, total, onChange }) => {
+const Pagination = ({ page, total, onChange, compact = false }) => {
   if (total <= 1) return null;
+  const sz = compact ? 'w-5 h-5' : 'w-6 h-6';
+  const fsz = compact ? 'text-[8px]' : 'text-[10px]';
   return (
-    <div className="flex justify-center items-center gap-1 mt-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+    <div className={`flex justify-center items-center gap-0.5 ${compact ? 'mt-0.5 pt-0.5' : 'mt-2 pt-2'} border-t border-zinc-100 dark:border-zinc-800`}>
       <button onClick={() => onChange(0)} disabled={page === 0}
-        className="w-6 h-6 flex items-center justify-center text-[10px] font-black border border-outline-variant disabled:opacity-30 hover:bg-surface-container rounded-sm">«</button>
+        className={`${sz} flex items-center justify-center ${fsz} font-black border border-outline-variant disabled:opacity-30 hover:bg-surface-container rounded-sm`}>«</button>
       <button onClick={() => onChange(Math.max(0, page - 1))} disabled={page === 0}
-        className="w-6 h-6 flex items-center justify-center border border-outline-variant disabled:opacity-30 hover:bg-surface-container rounded-sm">
-        <span className="material-symbols-outlined text-xs">chevron_left</span>
+        className={`${sz} flex items-center justify-center border border-outline-variant disabled:opacity-30 hover:bg-surface-container rounded-sm`}>
+        <span className={`material-symbols-outlined ${compact ? 'text-[10px]' : 'text-xs'}`}>chevron_left</span>
       </button>
-      <span className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 tracking-widest uppercase min-w-[48px] text-center">
+      <span className={`${fsz} font-black text-zinc-500 dark:text-zinc-400 tracking-widest uppercase min-w-[36px] text-center`}>
         {page + 1}/{total}
       </span>
       <button onClick={() => onChange(Math.min(total - 1, page + 1))} disabled={page === total - 1}
-        className="w-6 h-6 flex items-center justify-center border border-outline-variant disabled:opacity-30 hover:bg-surface-container rounded-sm">
-        <span className="material-symbols-outlined text-xs">chevron_right</span>
+        className={`${sz} flex items-center justify-center border border-outline-variant disabled:opacity-30 hover:bg-surface-container rounded-sm`}>
+        <span className={`material-symbols-outlined ${compact ? 'text-[10px]' : 'text-xs'}`}>chevron_right</span>
       </button>
       <button onClick={() => onChange(total - 1)} disabled={page === total - 1}
-        className="w-6 h-6 flex items-center justify-center text-[10px] font-black border border-outline-variant disabled:opacity-30 hover:bg-surface-container rounded-sm">»</button>
+        className={`${sz} flex items-center justify-center ${fsz} font-black border border-outline-variant disabled:opacity-30 hover:bg-surface-container rounded-sm`}>»</button>
     </div>
   );
 };
@@ -129,13 +138,49 @@ const Empty = ({ msg = 'Không có dữ liệu.' }) => (
   </div>
 );
 
+// ─── Expand Modal (chart zoom overlay) ────────────────────────────────────────
+const ExpandModal = ({ open, onClose, title, children }) => {
+  useEffect(() => {
+    if (open) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = '';
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center" onClick={onClose}>
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      {/* Modal */}
+      <div
+        className="relative bg-white dark:bg-zinc-900 border border-outline-variant/30 shadow-2xl w-[92vw] h-[88vh] flex flex-col overflow-hidden"
+        onClick={e => e.stopPropagation()}
+        style={{ animation: 'fadeIn 0.2s ease-out' }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
+          <h2 className="text-base font-headline font-extrabold tracking-tight text-on-surface">{title}</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
+            <span className="material-symbols-outlined text-lg text-zinc-500">close</span>
+          </button>
+        </div>
+        {/* Content */}
+        <div className="flex-1 min-h-0 p-4 overflow-auto">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // 1. SKILLS — horizontal bar, 10 per page
 // ═══════════════════════════════════════════════════════════════════════════════
-const SkillsChart = ({ data }) => {
+const SkillsChart = ({ data, compact = false, onExpand }) => {
   const ref = useRef(null);
   const isMobile = useIsMobile();
-  const PAGE = 10;
+  const PAGE = compact ? 8 : 10;
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
 
@@ -143,23 +188,23 @@ const SkillsChart = ({ data }) => {
   const totalPages = Math.ceil(filtered.length / PAGE);
   const slice = filtered.slice(page * PAGE, (page + 1) * PAGE).slice().reverse();
 
-  const lm = isMobile ? 80 : 120;
+  const lm = isMobile ? 80 : (compact ? 100 : 120);
 
   useECharts(ref, () => slice.length === 0 ? null : ({
     tooltip: {
       ...mkTooltip(), trigger: 'axis', axisPointer: { type: 'shadow' },
       formatter: (p) => `<b>${p[0].name}</b><br/>${p[0].value} jobs`,
     },
-    grid: { left: lm, right: isMobile ? 32 : 48, top: 4, bottom: 4, containLabel: false },
+    grid: { left: lm, right: compact ? 24 : (isMobile ? 32 : 48), top: 4, bottom: 4, containLabel: false },
     xAxis: {
       type: 'value',
-      axisLabel: { fontSize: isMobile ? 9 : 10, color: '#94a3b8' },
+      axisLabel: { fontSize: compact ? 9 : (isMobile ? 9 : 10), color: '#94a3b8' },
       splitLine: { lineStyle: { color: '#f1f5f9' } }, axisLine: { show: false },
     },
     yAxis: {
       type: 'category',
-      data: slice.map(s => isMobile ? trunc(s.name, 10) : trunc(s.name, 18)),
-      axisLabel: { fontSize: isMobile ? 9 : 11, fontWeight: 600, color: '#334155', width: lm - 6, overflow: 'truncate' },
+      data: slice.map(s => compact ? trunc(s.name, 14) : (isMobile ? trunc(s.name, 10) : trunc(s.name, 18))),
+      axisLabel: { fontSize: compact ? 9 : (isMobile ? 9 : 11), fontWeight: 600, color: '#334155', width: lm - 6, overflow: 'truncate' },
       axisLine: { show: false }, axisTick: { show: false },
     },
     series: [{
@@ -179,28 +224,30 @@ const SkillsChart = ({ data }) => {
           },
         };
       }),
-      label: { show: !isMobile, position: 'right', formatter: '{c}', fontSize: 10, color: '#64748b', fontWeight: 700 },
-      barMaxWidth: isMobile ? 12 : 18,
+      label: { show: !isMobile, position: 'right', formatter: '{c}', fontSize: compact ? 9 : 10, color: '#64748b', fontWeight: 700 },
+      barMaxWidth: compact ? 14 : (isMobile ? 12 : 18),
     }],
-  }), [JSON.stringify(slice), isMobile]);
+  }), [JSON.stringify(slice), isMobile, compact]);
 
-  const chartH = Math.max(180, slice.length * (isMobile ? 22 : 26));
+  const chartH = compact ? '100%' : Math.max(180, slice.length * (isMobile ? 22 : 26));
 
   return (
-    <Card>
-      <CardHeader title="Top Kỹ năng Phổ biến" subtitle={`${filtered.length} kỹ năng · 10/trang`} />
-      <div className="px-4 md:px-5 pt-2">
-        <SearchInput value={search} onChange={v => { setSearch(v); setPage(0); }} placeholder="Tìm kỹ năng..." />
+    <Card fill={compact}>
+      <CardHeader compact={compact} onExpand={onExpand}
+        title="Top Kỹ năng Phổ biến"
+        subtitle={`${filtered.length} kỹ năng · ${PAGE}/trang`} />
+      <div className={compact ? 'px-2 pt-0.5' : 'px-4 md:px-5 pt-2'}>
+        <SearchInput compact={compact} value={search} onChange={v => { setSearch(v); setPage(0); }} placeholder="Tìm kỹ năng..." />
       </div>
-      <div className="px-1 md:px-2 py-1.5">
+      <div className={`px-1 md:px-2 py-1 ${compact ? 'flex-1 min-h-0' : ''}`}>
         {slice.length > 0
           ? <div ref={ref} style={{ width: '100%', height: chartH }} />
           : <Empty msg="Không tìm thấy kỹ năng phù hợp." />
         }
       </div>
-      <div className="px-4 md:px-5 pb-3">
-        <Pagination page={page} total={totalPages} onChange={setPage} />
-        {page === 0 && search === '' && (
+      <div className={compact ? 'px-2 pb-1' : 'px-4 md:px-5 pb-3'}>
+        <Pagination compact={compact} page={page} total={totalPages} onChange={setPage} />
+        {!compact && page === 0 && search === '' && (
           <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-zinc-100">
             <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400 self-center mr-1">Hot:</span>
             {data.slice(0, 3).map((s, i) => (
@@ -219,11 +266,10 @@ const SkillsChart = ({ data }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // 2. LOCATIONS — Pie / Donut chart
 // ═══════════════════════════════════════════════════════════════════════════════
-const LocationsChart = ({ data, totalJobs }) => {
+const LocationsChart = ({ data, totalJobs, compact = false, onExpand }) => {
   const ref = useRef(null);
   const isMobile = useIsMobile();
 
-  // Top 8 locations, merge rest into "Khác"
   const top = data.slice(0, 8);
   const rest = data.slice(8);
   const restCount = rest.reduce((sum, l) => sum + parseInt(l.count), 0);
@@ -247,39 +293,39 @@ const LocationsChart = ({ data, totalJobs }) => {
       },
     },
     legend: {
-      orient: isMobile ? 'horizontal' : 'vertical',
-      [isMobile ? 'bottom' : 'right']: isMobile ? 0 : 12,
-      top: isMobile ? 'auto' : 'middle',
-      textStyle: { fontSize: isMobile ? 9 : 11, fontWeight: 600 },
-      itemWidth: 10, itemHeight: 10,
+      orient: (isMobile || compact) ? 'horizontal' : 'vertical',
+      [(isMobile || compact) ? 'bottom' : 'right']: (isMobile || compact) ? 0 : 12,
+      top: (isMobile || compact) ? 'auto' : 'middle',
+      textStyle: { fontSize: compact ? 8 : (isMobile ? 9 : 11), fontWeight: 600 },
+      itemWidth: compact ? 8 : 10, itemHeight: compact ? 8 : 10,
     },
     series: [{
       type: 'pie',
-      radius: ['35%', '62%'],
-      center: isMobile ? ['50%', '42%'] : ['35%', '50%'],
+      radius: compact ? ['30%', '55%'] : ['35%', '62%'],
+      center: compact ? ['50%', '45%'] : (isMobile ? ['50%', '42%'] : ['35%', '50%']),
       data: pieData,
       label: {
-        show: !isMobile,
+        show: !isMobile && !compact,
         formatter: '{b}\n{d}%',
         fontSize: 10, fontWeight: 600, color: '#475569',
       },
       emphasis: {
         itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.14)' },
-        label: { show: true, fontSize: 12, fontWeight: 700 },
+        label: { show: true, fontSize: compact ? 10 : 12, fontWeight: 700 },
       },
       animationType: 'scale', animationEasing: 'elasticOut',
     }],
-  }), [JSON.stringify(pieData), isMobile]);
+  }), [JSON.stringify(pieData), isMobile, compact]);
 
   return (
-    <Card>
-      <CardHeader
-        title="Phân tích theo Địa điểm"
-        subtitle={`${data.length} tỉnh/thành · top khu vực`}
+    <Card fill={compact}>
+      <CardHeader compact={compact} onExpand={onExpand}
+        title="Địa điểm"
+        subtitle={compact ? `${data.length} tỉnh/thành` : `${data.length} tỉnh/thành · top khu vực`}
       />
-      <div className="px-1 md:px-2 py-2">
+      <div className={`px-1 md:px-2 py-1 ${compact ? 'flex-1 min-h-0' : ''}`}>
         {pieData.length > 0
-          ? <div ref={ref} style={{ width: '100%', height: isMobile ? 260 : 280 }} />
+          ? <div ref={ref} style={{ width: '100%', height: compact ? '100%' : (isMobile ? 260 : 280) }} />
           : <Empty msg="Không có dữ liệu địa điểm." />
         }
       </div>
@@ -290,7 +336,7 @@ const LocationsChart = ({ data, totalJobs }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // 3. TREND — area line
 // ═══════════════════════════════════════════════════════════════════════════════
-const TrendChart = ({ data }) => {
+const TrendChart = ({ data, compact = false, onExpand }) => {
   const ref = useRef(null);
   const isMobile = useIsMobile();
 
@@ -303,37 +349,37 @@ const TrendChart = ({ data }) => {
     xAxis: {
       type: 'category', data: data.map(d => d.date), boundaryGap: false,
       axisLabel: {
-        fontSize: isMobile ? 8 : 10, color: '#94a3b8',
-        rotate: isMobile && data.length > 12 ? -45 : 0,
-        interval: isMobile ? Math.floor(data.length / 5) : 'auto',
+        fontSize: compact ? 8 : (isMobile ? 8 : 10), color: '#94a3b8',
+        rotate: (isMobile || compact) && data.length > 12 ? -45 : 0,
+        interval: (isMobile || compact) ? Math.floor(data.length / 5) : 'auto',
       },
       axisLine: { lineStyle: { color: '#e2e8f0' } }, axisTick: { show: false },
     },
     yAxis: {
       type: 'value',
-      axisLabel: { fontSize: isMobile ? 8 : 10, color: '#94a3b8' },
+      axisLabel: { fontSize: compact ? 8 : (isMobile ? 8 : 10), color: '#94a3b8' },
       splitLine: { lineStyle: { color: '#f1f5f9' } }, axisLine: { show: false },
     },
     series: [{
       type: 'line', smooth: true,
       data: data.map(d => d.count),
-      lineStyle: { color: '#6366f1', width: 2 },
+      lineStyle: { color: '#6366f1', width: compact ? 1.5 : 2 },
       itemStyle: { color: '#6366f1' },
       areaStyle: {
         color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
           colorStops: [{ offset: 0, color: 'rgba(99,102,241,0.22)' }, { offset: 1, color: 'rgba(99,102,241,0)' }] },
       },
-      symbol: 'circle', symbolSize: isMobile ? 2 : 4,
+      symbol: 'circle', symbolSize: compact ? 2 : (isMobile ? 2 : 4),
     }],
-  }), [JSON.stringify(data), isMobile]);
+  }), [JSON.stringify(data), isMobile, compact]);
 
   if (!data.length) return null;
 
   return (
-    <Card>
-      <CardHeader title="Xu hướng Tuyển dụng" subtitle="Số lượng tin đăng theo thời gian" />
-      <div className="px-1 md:px-2 py-2">
-        <div ref={ref} style={{ width: '100%', height: isMobile ? 160 : 200 }} />
+    <Card fill={compact}>
+      <CardHeader compact={compact} onExpand={onExpand} title="Xu hướng Tuyển dụng" subtitle="Tin đăng theo thời gian" />
+      <div className={`px-1 md:px-2 py-1 ${compact ? 'flex-1 min-h-0' : ''}`}>
+        <div ref={ref} style={{ width: '100%', height: compact ? '100%' : (isMobile ? 160 : 200) }} />
       </div>
     </Card>
   );
@@ -342,7 +388,7 @@ const TrendChart = ({ data }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // 4. ROLES — bar chart
 // ═══════════════════════════════════════════════════════════════════════════════
-const RolesChart = ({ data }) => {
+const RolesChart = ({ data, compact = false, onExpand }) => {
   const ref = useRef(null);
   const isMobile = useIsMobile();
 
@@ -398,12 +444,12 @@ const RolesChart = ({ data }) => {
     };
   }, [JSON.stringify(data), isMobile]);
 
-  const h = isMobile ? Math.max(160, data.length * 24) : 280;
+  const h = compact ? '100%' : (isMobile ? Math.max(160, data.length * 24) : 280);
 
   return (
-    <Card>
-      <CardHeader title="Nhu cầu theo Vai trò" subtitle="Số tin tuyển dụng theo vai trò" />
-      <div className="px-1 md:px-2 py-2">
+    <Card fill={compact}>
+      <CardHeader compact={compact} onExpand={onExpand} title="Vai trò" subtitle="Tin tuyển dụng theo vai trò" />
+      <div className={`px-1 md:px-2 py-1 ${compact ? 'flex-1 min-h-0' : ''}`}>
         {data.length > 0
           ? <div ref={ref} style={{ width: '100%', height: h }} />
           : <Empty msg="Không có dữ liệu vai trò." />
@@ -416,7 +462,7 @@ const RolesChart = ({ data }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // 5. SALARY BY ROLE — grouped bar
 // ═══════════════════════════════════════════════════════════════════════════════
-const SalaryRoleChart = ({ data }) => {
+const SalaryRoleChart = ({ data, compact = false, onExpand }) => {
   const ref = useRef(null);
   const isMobile = useIsMobile();
   const items = data.filter(r => r.avg_min && r.avg_max);
@@ -431,32 +477,32 @@ const SalaryRoleChart = ({ data }) => {
         return `<b>${name}</b><br/>Min: ${formatVND(min)}<br/>Max: ${formatVND(max)}`;
       },
     },
-    legend: { data: ['Min','Max'], top: 0, right: 4, textStyle: { fontSize: 10, fontWeight: 600 }, itemWidth: 10, itemHeight: 8 },
-    grid: { left: 8, right: 8, top: 28, bottom: isMobile ? 48 : 60, containLabel: true },
+    legend: { data: ['Min','Max'], top: 0, right: 4, textStyle: { fontSize: compact ? 9 : 10, fontWeight: 600 }, itemWidth: 10, itemHeight: 8 },
+    grid: { left: 8, right: 8, top: 22, bottom: compact ? 40 : (isMobile ? 48 : 60), containLabel: true },
     xAxis: {
       type: 'category',
-      data: items.map(r => isMobile ? trunc(r.role, 8) : r.role),
-      axisLabel: { fontSize: isMobile ? 8 : 10, rotate: isMobile ? -35 : -20, color: '#475569', interval: 0, fontWeight: 600, width: isMobile ? 50 : 72, overflow: 'truncate' },
+      data: items.map(r => (isMobile || compact) ? trunc(r.role, 8) : r.role),
+      axisLabel: { fontSize: compact ? 8 : (isMobile ? 8 : 10), rotate: (isMobile || compact) ? -35 : -20, color: '#475569', interval: 0, fontWeight: 600, width: (isMobile || compact) ? 50 : 72, overflow: 'truncate' },
       axisTick: { show: false }, axisLine: { lineStyle: { color: '#e2e8f0' } },
     },
     yAxis: {
       type: 'value',
-      axisLabel: { fontSize: isMobile ? 8 : 10, color: '#94a3b8', formatter: v => formatVND(v) },
+      axisLabel: { fontSize: compact ? 8 : (isMobile ? 8 : 10), color: '#94a3b8', formatter: v => formatVND(v) },
       splitLine: { lineStyle: { color: '#f1f5f9' } }, axisLine: { show: false },
     },
     series: [
-      { name: 'Min', type: 'bar', data: items.map(r => r.avg_min), itemStyle: { color: '#a5b4fc', borderRadius: [3,3,0,0] }, barMaxWidth: isMobile ? 14 : 24 },
-      { name: 'Max', type: 'bar', data: items.map(r => r.avg_max), itemStyle: { color: '#6366f1', borderRadius: [3,3,0,0] }, barMaxWidth: isMobile ? 14 : 24 },
+      { name: 'Min', type: 'bar', data: items.map(r => r.avg_min), itemStyle: { color: '#a5b4fc', borderRadius: [3,3,0,0] }, barMaxWidth: compact ? 16 : (isMobile ? 14 : 24) },
+      { name: 'Max', type: 'bar', data: items.map(r => r.avg_max), itemStyle: { color: '#6366f1', borderRadius: [3,3,0,0] }, barMaxWidth: compact ? 16 : (isMobile ? 14 : 24) },
     ],
-  }), [JSON.stringify(items), isMobile]);
+  }), [JSON.stringify(items), isMobile, compact]);
 
   if (!items.length) return null;
 
   return (
-    <Card>
-      <CardHeader title="Lương theo Vai trò" subtitle="Mức lương min–max trung bình" />
-      <div className="px-1 md:px-2 py-2">
-        <div ref={ref} style={{ width: '100%', height: isMobile ? 200 : 250 }} />
+    <Card fill={compact}>
+      <CardHeader compact={compact} onExpand={onExpand} title="Lương theo Vai trò" subtitle="Min–max trung bình" />
+      <div className={`px-1 md:px-2 py-1 ${compact ? 'flex-1 min-h-0' : ''}`}>
+        <div ref={ref} style={{ width: '100%', height: compact ? '100%' : (isMobile ? 200 : 250) }} />
       </div>
     </Card>
   );
@@ -465,11 +511,11 @@ const SalaryRoleChart = ({ data }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // 6. SALARY BY LEVEL — horizontal grouped bar
 // ═══════════════════════════════════════════════════════════════════════════════
-const SalaryLevelChart = ({ data }) => {
+const SalaryLevelChart = ({ data, compact = false, onExpand }) => {
   const ref = useRef(null);
   const isMobile = useIsMobile();
   const items = Array.isArray(data) ? data.filter(r => r.avg_min && r.avg_max) : [];
-  const lm = isMobile ? 68 : 100;
+  const lm = (isMobile || compact) ? 68 : 100;
 
   useECharts(ref, () => items.length === 0 ? null : ({
     tooltip: {
@@ -481,31 +527,31 @@ const SalaryLevelChart = ({ data }) => {
         return `<b>${name}</b><br/>Min: ${formatVND(min)}<br/>Max: ${formatVND(max)}`;
       },
     },
-    legend: { data: ['Min','Max'], top: 0, right: 4, textStyle: { fontSize: 10, fontWeight: 600 }, itemWidth: 10, itemHeight: 8 },
-    grid: { left: lm, right: isMobile ? 36 : 52, top: 22, bottom: 4, containLabel: false },
+    legend: { data: ['Min','Max'], top: 0, right: 4, textStyle: { fontSize: compact ? 9 : 10, fontWeight: 600 }, itemWidth: 10, itemHeight: 8 },
+    grid: { left: lm, right: (isMobile || compact) ? 36 : 52, top: 22, bottom: 4, containLabel: false },
     yAxis: {
       type: 'category',
-      data: [...items].reverse().map(r => isMobile ? trunc(r.role, 9) : r.role),
-      axisLabel: { fontSize: isMobile ? 9 : 11, fontWeight: 600, color: '#334155' },
+      data: [...items].reverse().map(r => (isMobile || compact) ? trunc(r.role, 9) : r.role),
+      axisLabel: { fontSize: compact ? 9 : (isMobile ? 9 : 11), fontWeight: 600, color: '#334155' },
       axisLine: { show: false }, axisTick: { show: false },
     },
     xAxis: {
       type: 'value',
-      axisLabel: { fontSize: isMobile ? 8 : 10, color: '#94a3b8', formatter: v => formatVND(v) },
+      axisLabel: { fontSize: compact ? 8 : (isMobile ? 8 : 10), color: '#94a3b8', formatter: v => formatVND(v) },
       splitLine: { lineStyle: { color: '#f1f5f9' } }, axisLine: { show: false },
     },
     series: [
-      { name: 'Min', type: 'bar', data: [...items].reverse().map(r => r.avg_min), itemStyle: { color: '#fcd34d', borderRadius: [0,3,3,0] }, barMaxWidth: isMobile ? 10 : 16 },
-      { name: 'Max', type: 'bar', data: [...items].reverse().map(r => r.avg_max), itemStyle: { color: '#f59e0b', borderRadius: [0,3,3,0] }, barMaxWidth: isMobile ? 10 : 16 },
+      { name: 'Min', type: 'bar', data: [...items].reverse().map(r => r.avg_min), itemStyle: { color: '#fcd34d', borderRadius: [0,3,3,0] }, barMaxWidth: compact ? 12 : (isMobile ? 10 : 16) },
+      { name: 'Max', type: 'bar', data: [...items].reverse().map(r => r.avg_max), itemStyle: { color: '#f59e0b', borderRadius: [0,3,3,0] }, barMaxWidth: compact ? 12 : (isMobile ? 10 : 16) },
     ],
-  }), [JSON.stringify(items), isMobile]);
+  }), [JSON.stringify(items), isMobile, compact]);
 
   return (
-    <Card>
-      <CardHeader title="Lương theo Cấp bậc" subtitle="Tính từ tin có số liệu" />
-      <div className="px-1 md:px-2 py-2">
+    <Card fill={compact}>
+      <CardHeader compact={compact} onExpand={onExpand} title="Lương theo Cấp bậc" subtitle="Tính từ tin có số liệu" />
+      <div className={`px-1 md:px-2 py-1 ${compact ? 'flex-1 min-h-0' : ''}`}>
         {items.length > 0
-          ? <div ref={ref} style={{ width: '100%', height: Math.max(isMobile ? 130 : 160, items.length * (isMobile ? 30 : 36)) }} />
+          ? <div ref={ref} style={{ width: '100%', height: compact ? '100%' : Math.max(isMobile ? 130 : 160, items.length * (isMobile ? 30 : 36)) }} />
           : <Empty msg="Không có dữ liệu lương." />
         }
       </div>
@@ -555,35 +601,35 @@ const ExperienceChart = ({ data }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // 8. AI INSIGHTS — Groq analysis card
 // ═══════════════════════════════════════════════════════════════════════════════
-const AIInsightsCard = ({ filters }) => {
+const AIInsightsCard = ({ filters, compact = false }) => {
   const { data: raw, isLoading, isFetching } = useAIInsights(filters);
   const insights = raw?.data?.insights || raw?.insights || [];
 
   return (
-    <Card className="border-primary/30 bg-gradient-to-br from-indigo-50/60 dark:from-indigo-950/30 to-white dark:to-zinc-900">
-      <CardHeader
-        title={<span className="flex items-center gap-1.5">
-          <span className="material-symbols-outlined text-primary text-lg">auto_awesome</span>
-          AI Phân tích Thị trường
+    <Card fill={compact} className="border-primary/30 bg-gradient-to-br from-indigo-50/60 dark:from-indigo-950/30 to-white dark:to-zinc-900">
+      <CardHeader compact={compact}
+        title={<span className="flex items-center gap-1">
+          <span className={`material-symbols-outlined text-primary ${compact ? 'text-sm' : 'text-lg'}`}>auto_awesome</span>
+          AI Phân tích
         </span>}
-        subtitle="Groq AI đọc dữ liệu thực từ database"
+        subtitle="Groq AI đọc dữ liệu thực"
       />
-      <div className="px-4 md:px-5 pb-4 pt-2">
+      <div className={`${compact ? 'px-2 pb-2 pt-1 flex-1 min-h-0 overflow-y-auto dashboard-scroll' : 'px-4 md:px-5 pb-4 pt-2'}`}>
         {(isLoading || isFetching) ? (
-          <div className="flex items-center gap-2 py-4">
-            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs font-bold text-zinc-500">AI đang phân tích dữ liệu...</span>
+          <div className="flex items-center gap-2 py-3">
+            <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className={`font-bold text-zinc-500 ${compact ? 'text-[10px]' : 'text-xs'}`}>AI đang phân tích...</span>
           </div>
         ) : insights.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className={`grid gap-1.5 ${compact ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 gap-2'}`}>
             {insights.map((insight, i) => (
-              <div key={i} className="bg-white/80 dark:bg-zinc-800/80 border border-indigo-100 dark:border-indigo-900/50 px-3 py-2.5 text-xs leading-relaxed text-zinc-700 dark:text-zinc-300 font-medium hover:shadow-sm transition-shadow">
+              <div key={i} className={`bg-white/80 dark:bg-zinc-800/80 border border-indigo-100 dark:border-indigo-900/50 leading-relaxed text-zinc-700 dark:text-zinc-300 font-medium hover:shadow-sm transition-shadow ${compact ? 'px-2 py-1.5 text-[10px]' : 'px-3 py-2.5 text-xs'}`}>
                 {insight}
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-xs text-zinc-400 italic py-2">Không thể lấy phân tích AI.</p>
+          <p className={`text-zinc-400 italic py-2 ${compact ? 'text-[10px]' : 'text-xs'}`}>Không thể lấy phân tích AI.</p>
         )}
       </div>
     </Card>
@@ -676,6 +722,7 @@ const AnalysisDashboard = () => {
   const [selectedLocationId, setSelectedLocationId] = useState(null);
   const [selectedLevelId, setSelectedLevelId] = useState(null);
   const [selectedSkillId, setSelectedSkillId] = useState(null);
+  const [expandedChart, setExpandedChart] = useState(null);
 
   useEffect(() => { injectECharts(); }, []);
 
@@ -739,131 +786,172 @@ const AnalysisDashboard = () => {
     { label: 'Lương TB cao',   value: topSalary ? formatVND(topSalary.avg_max) : 'N/A', icon: 'payments', accent: 'bg-pink-50 text-pink-600' },
   ];
 
-  return (
-    <div className="flex pt-14 md:pt-16 min-h-screen bg-surface">
-      {isFetching && <LoadingOverlay message="Đang tải dữ liệu phân tích..." />}
-      <main className="flex-1 px-3 py-3 md:px-6 md:py-6 max-w-screen-xl mx-auto w-full">
-
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3 md:mb-4">
-          <div>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-primary mb-0.5 block">
-              Bức tranh CNTT Việt Nam
-            </span>
-            <h1 className="text-xl md:text-3xl font-headline font-extrabold tracking-tight text-on-surface">
-              Phân tích Thị trường
-            </h1>
+  // ─── MOBILE LAYOUT (unchanged, scrollable) ──────────────────────────────────
+  if (isMobile) {
+    return (
+      <div className="flex pt-14 md:pt-16 min-h-screen bg-surface">
+        {isFetching && <LoadingOverlay message="Đang tải dữ liệu phân tích..." />}
+        <main className="flex-1 px-3 py-3 max-w-screen-xl mx-auto w-full">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3">
+            <div>
+              <span className="text-[9px] font-bold uppercase tracking-widest text-primary mb-0.5 block">Bức tranh CNTT Việt Nam</span>
+              <h1 className="text-xl font-headline font-extrabold tracking-tight text-on-surface">Phân tích Thị trường</h1>
+            </div>
           </div>
-        </div>
 
-        {/* Filter Bar */}
-        <div className="mb-3 md:mb-4 p-2.5 md:p-3 bg-white dark:bg-zinc-900 border border-outline-variant/30 shadow-sm transition-colors">
-          <div className="flex items-center gap-1.5 mb-2">
-            <span className="material-symbols-outlined text-primary text-sm">tune</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Bộ lọc</span>
+          <div className="mb-3 p-2.5 bg-white dark:bg-zinc-900 border border-outline-variant/30 shadow-sm transition-colors">
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="material-symbols-outlined text-primary text-sm">tune</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Bộ lọc</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <FilterDropdown icon="work_outline" label="Tất cả vai trò" items={rolesList} selectedId={selectedRoleId} onChange={setSelectedRoleId} displayKey="name" />
+              <FilterDropdown icon="location_on" label="Tất cả địa điểm" items={locationsList.map(l => ({ ...l, name: l.city }))} selectedId={selectedLocationId} onChange={setSelectedLocationId} displayKey="name" />
+              <FilterDropdown icon="trending_up" label="Tất cả cấp bậc" items={levelsList} selectedId={selectedLevelId} onChange={setSelectedLevelId} displayKey="name" />
+              <FilterDropdown icon="psychology" label="Tất cả kỹ năng" items={skillsList} selectedId={selectedSkillId} onChange={setSelectedSkillId} displayKey="name" />
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <FilterDropdown
-              icon="work_outline"
-              label="Tất cả vai trò"
-              items={rolesList}
-              selectedId={selectedRoleId}
-              onChange={setSelectedRoleId}
-              displayKey="name"
-            />
-            <FilterDropdown
-              icon="location_on"
-              label="Tất cả địa điểm"
-              items={locationsList.map(l => ({ ...l, name: l.city }))}
-              selectedId={selectedLocationId}
-              onChange={setSelectedLocationId}
-              displayKey="name"
-            />
-            <FilterDropdown
-              icon="trending_up"
-              label="Tất cả cấp bậc"
-              items={levelsList}
-              selectedId={selectedLevelId}
-              onChange={setSelectedLevelId}
-              displayKey="name"
-            />
-            <FilterDropdown
-              icon="psychology"
-              label="Tất cả kỹ năng"
-              items={skillsList}
-              selectedId={selectedSkillId}
-              onChange={setSelectedSkillId}
-              displayKey="name"
-            />
-          </div>
-        </div>
 
-        {/* Active filter badges */}
-        {activeFilters.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 mb-3 md:mb-4">
-            <span className="material-symbols-outlined text-primary text-sm">filter_alt</span>
-            {activeFilters.map(f => (
-              <span key={f.key} className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold border rounded-sm ${f.color}`}>
-                {f.label}
-                <button onClick={f.clear} className="hover:opacity-60 transition-opacity ml-0.5">
-                  <span className="material-symbols-outlined text-[12px]">close</span>
+          {activeFilters.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 mb-3">
+              <span className="material-symbols-outlined text-primary text-sm">filter_alt</span>
+              {activeFilters.map(f => (
+                <span key={f.key} className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold border rounded-sm ${f.color}`}>
+                  {f.label}
+                  <button onClick={f.clear} className="hover:opacity-60 transition-opacity ml-0.5">
+                    <span className="material-symbols-outlined text-[12px]">close</span>
+                  </button>
+                </span>
+              ))}
+              {activeFilters.length > 1 && (
+                <button onClick={clearAllFilters} className="text-[10px] font-black uppercase tracking-wider text-zinc-500 hover:text-red-500 flex items-center gap-0.5 transition-colors ml-1">
+                  <span className="material-symbols-outlined text-xs">delete_sweep</span> Xóa tất cả
                 </button>
-              </span>
+              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            {kpis.map((k, i) => (
+              <div key={i} className="bg-surface-container-lowest px-3 py-2.5 flex items-center gap-3 group relative transition-all hover:shadow-md overflow-hidden">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${k.accent}`}>
+                  <span className="material-symbols-outlined text-base">{k.icon}</span>
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant leading-tight truncate">{k.label}</div>
+                  <div className="text-sm font-headline font-extrabold tracking-tighter leading-tight truncate">{k.value}</div>
+                </div>
+                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
+              </div>
             ))}
-            {activeFilters.length > 1 && (
-              <button onClick={clearAllFilters}
-                className="text-[10px] font-black uppercase tracking-wider text-zinc-500 hover:text-red-500 flex items-center gap-0.5 transition-colors ml-1">
-                <span className="material-symbols-outlined text-xs">delete_sweep</span>
-                Xóa tất cả
-              </button>
+          </div>
+
+          <div className="mb-3"><AIInsightsCard filters={filters} /></div>
+
+          <div className="flex flex-col gap-3">
+            <SkillsChart data={skills} />
+            <LocationsChart data={locations} totalJobs={totalJobs} />
+            {trend.length > 0 && <TrendChart data={trend} />}
+            <RolesChart data={roles} />
+            <SalaryRoleChart data={roles} />
+            <SalaryLevelChart data={salaryByLevel} />
+            <ExperienceChart data={levels} />
+          </div>
+          <div className="h-3" />
+        </main>
+      </div>
+    );
+  }
+
+  // ─── DESKTOP LAYOUT — Power BI style, viewport-locked ─────────────────────
+  return (
+    <div className="pt-16 bg-surface dashboard-viewport flex flex-col">
+      {isFetching && <LoadingOverlay message="Đang tải dữ liệu phân tích..." />}
+
+      {/* Top bar: Title + Filters + KPIs */}
+      <div className="px-3 pt-2 pb-1.5 shrink-0">
+        {/* Row 1: Title + Filters inline */}
+        <div className="flex items-center gap-4 mb-1.5">
+          <h1 className="text-base font-headline font-extrabold tracking-tight text-on-surface whitespace-nowrap shrink-0">
+            📊 Phân tích Thị trường
+          </h1>
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <span className="material-symbols-outlined text-primary text-sm shrink-0">tune</span>
+            <div className="flex flex-wrap gap-1.5">
+              <FilterDropdown icon="work_outline" label="Vai trò" items={rolesList} selectedId={selectedRoleId} onChange={setSelectedRoleId} displayKey="name" />
+              <FilterDropdown icon="location_on" label="Địa điểm" items={locationsList.map(l => ({ ...l, name: l.city }))} selectedId={selectedLocationId} onChange={setSelectedLocationId} displayKey="name" />
+              <FilterDropdown icon="trending_up" label="Cấp bậc" items={levelsList} selectedId={selectedLevelId} onChange={setSelectedLevelId} displayKey="name" />
+              <FilterDropdown icon="psychology" label="Kỹ năng" items={skillsList} selectedId={selectedSkillId} onChange={setSelectedSkillId} displayKey="name" />
+            </div>
+            {activeFilters.length > 0 && (
+              <div className="flex items-center gap-1 ml-2">
+                {activeFilters.map(f => (
+                  <span key={f.key} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-bold border rounded-sm ${f.color}`}>
+                    {f.label}
+                    <button onClick={f.clear} className="hover:opacity-60"><span className="material-symbols-outlined text-[10px]">close</span></button>
+                  </span>
+                ))}
+                {activeFilters.length > 1 && (
+                  <button onClick={clearAllFilters} className="text-[9px] font-black text-zinc-400 hover:text-red-500 ml-0.5">✕ All</button>
+                )}
+              </div>
             )}
           </div>
-        )}
+        </div>
 
-        {/* KPIs — 4 col */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3 mb-3 md:mb-5">
+        {/* Row 2: KPI mini cards */}
+        <div className="grid grid-cols-4 gap-2">
           {kpis.map((k, i) => (
-            <div key={i} className="bg-surface-container-lowest px-3 py-2.5 md:p-4 flex items-center gap-3 group relative transition-all hover:shadow-md overflow-hidden">
-              <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center shrink-0 ${k.accent}`}>
-                <span className="material-symbols-outlined text-base md:text-lg">{k.icon}</span>
+            <div key={i} className="bg-surface-container-lowest px-2.5 py-1.5 flex items-center gap-2 group relative overflow-hidden border border-outline-variant/10">
+              <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${k.accent}`}>
+                <span className="material-symbols-outlined text-sm">{k.icon}</span>
               </div>
               <div className="min-w-0">
-                <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-on-surface-variant leading-tight truncate">
-                  {k.label}
-                </div>
-                <div className="text-sm md:text-xl font-headline font-extrabold tracking-tighter leading-tight truncate">{k.value}</div>
+                <div className="text-[8px] font-bold uppercase tracking-widest text-on-surface-variant leading-tight truncate">{k.label}</div>
+                <div className="text-sm font-headline font-extrabold tracking-tighter leading-tight truncate">{k.value}</div>
               </div>
               <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
             </div>
           ))}
         </div>
+      </div>
 
-        {/* AI Insights */}
-        <div className="mb-3 md:mb-5">
-          <AIInsightsCard filters={filters} />
+      {/* Charts Grid — fills remaining viewport */}
+      <div className="flex-1 min-h-0 px-2 pb-2 grid grid-cols-4 grid-rows-2 gap-1.5"
+           style={{ gridTemplateColumns: '1fr 1fr 1fr 0.85fr' }}>
+        {/* Row 1 */}
+        <SkillsChart data={skills} compact onExpand={() => setExpandedChart('skills')} />
+        <LocationsChart data={locations} totalJobs={totalJobs} compact onExpand={() => setExpandedChart('locations')} />
+        <TrendChart data={trend} compact onExpand={() => setExpandedChart('trend')} />
+        <div className="row-span-2">
+          <AIInsightsCard filters={filters} compact />
         </div>
 
-        {/* Charts — 2 column grid on desktop */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
-          {/* Left column */}
-          <div className="flex flex-col gap-3 md:gap-4">
-            <SkillsChart data={skills} />
-            <RolesChart data={roles} />
-            <SalaryRoleChart data={roles} />
-          </div>
+        {/* Row 2 */}
+        <RolesChart data={roles} compact onExpand={() => setExpandedChart('roles')} />
+        <SalaryRoleChart data={roles} compact onExpand={() => setExpandedChart('salaryRole')} />
+        <SalaryLevelChart data={salaryByLevel} compact onExpand={() => setExpandedChart('salaryLevel')} />
+      </div>
 
-          {/* Right column */}
-          <div className="flex flex-col gap-3 md:gap-4">
-            <LocationsChart data={locations} totalJobs={totalJobs} />
-            {trend.length > 0 && <TrendChart data={trend} />}
-            <SalaryLevelChart data={salaryByLevel} />
-            <ExperienceChart data={levels} />
-          </div>
-        </div>
-
-        {/* Safe area bottom for mobile */}
-        <div className="h-3 md:h-0" />
-      </main>
+      {/* Expand Modals */}
+      <ExpandModal open={expandedChart === 'skills'} onClose={() => setExpandedChart(null)} title="Top Kỹ năng Phổ biến">
+        <SkillsChart data={skills} />
+      </ExpandModal>
+      <ExpandModal open={expandedChart === 'locations'} onClose={() => setExpandedChart(null)} title="Phân tích theo Địa điểm">
+        <LocationsChart data={locations} totalJobs={totalJobs} />
+      </ExpandModal>
+      <ExpandModal open={expandedChart === 'trend'} onClose={() => setExpandedChart(null)} title="Xu hướng Tuyển dụng">
+        <TrendChart data={trend} />
+      </ExpandModal>
+      <ExpandModal open={expandedChart === 'roles'} onClose={() => setExpandedChart(null)} title="Nhu cầu theo Vai trò">
+        <RolesChart data={roles} />
+      </ExpandModal>
+      <ExpandModal open={expandedChart === 'salaryRole'} onClose={() => setExpandedChart(null)} title="Lương theo Vai trò">
+        <SalaryRoleChart data={roles} />
+      </ExpandModal>
+      <ExpandModal open={expandedChart === 'salaryLevel'} onClose={() => setExpandedChart(null)} title="Lương theo Cấp bậc">
+        <SalaryLevelChart data={salaryByLevel} />
+      </ExpandModal>
     </div>
   );
 };

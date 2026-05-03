@@ -30,6 +30,34 @@
     @apply bg-surface font-body text-on-surface transition-colors duration-300;
   }
 
+  /* Power BI-style dashboard viewport lock (desktop only) */
+  .dashboard-viewport {
+    height: calc(100vh - 64px);
+    overflow: hidden;
+  }
+
+  @media (max-width: 1023px) {
+    .dashboard-viewport {
+      height: auto;
+      overflow: visible;
+    }
+  }
+
+  /* Compact scrollbar for dashboard panels */
+  .dashboard-scroll::-webkit-scrollbar {
+    width: 3px;
+  }
+  .dashboard-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .dashboard-scroll::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.3);
+    border-radius: 3px;
+  }
+  .dashboard-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.5);
+  }
+
   /* Dark mode overrides */
   .dark {
     --color-primary: #ffb347;

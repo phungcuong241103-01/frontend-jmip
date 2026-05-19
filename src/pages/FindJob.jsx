@@ -385,7 +385,7 @@ const FindJob = () => {
       </aside>
 
       {/* Main Content */}
-      <section className="md:ml-80 w-full p-4 md:p-8 lg:p-12">
+      <section className="md:ml-10 w-full p-4 md:p-8 lg:p-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-12 gap-4 md:gap-6">
           <div className="max-w-2xl">
             <h1 className="text-3xl md:text-5xl font-headline font-extrabold tracking-tighter text-zinc-900 dark:text-zinc-100 mb-2 leading-tight">

@@ -73,16 +73,22 @@ const ChatWidget = () => {
               <span className="font-headline font-bold">JMIP Assistant</span>
               <span className="text-[10px] tracking-widest uppercase">NgocAI Powered</span>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-on-primary hover:opacity-70 cursor-pointer">
-              <span className="material-symbols-outlined">close</span>
-            </button>
-            <button
-              onClick={() => { setMessages([DEFAULT_MSG]); localStorage.removeItem(STORAGE_KEY); }}
-              title="Xóa lịch sử"
-              className="text-on-primary/60 hover:text-on-primary cursor-pointer ml-1"
-            >
-              <span className="material-symbols-outlined text-lg">delete_sweep</span>
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => { setMessages([DEFAULT_MSG]); localStorage.removeItem(STORAGE_KEY); }}
+                title="Xóa lịch sử chat"
+                className="w-8 h-8 flex items-center justify-center rounded-md text-on-primary/60 hover:text-on-primary hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-lg">delete_sweep</span>
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                title="Đóng chat"
+                className="w-8 h-8 flex items-center justify-center rounded-md text-on-primary hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
           </div>
 
           {/* Messages */}

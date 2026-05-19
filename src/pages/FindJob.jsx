@@ -350,10 +350,11 @@ const FindJob = () => {
 
       {/* Sidebar */}
       <aside className={`
-        bg-zinc-50 dark:bg-zinc-900 flex flex-col h-[calc(100vh-64px)] w-[85vw] max-w-sm md:w-80 fixed left-0 overflow-y-auto border-r-0 z-50
+        bg-zinc-50 dark:bg-zinc-900 flex flex-col h-[calc(100vh-64px)] w-[85vw] max-w-sm md:w-80 overflow-y-auto border-r-0
+        fixed left-0 top-16 z-50
         transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        md:translate-x-0 md:z-auto
+        md:translate-x-0 md:z-auto md:sticky md:shrink-0
       `}>
         <div className="md:hidden flex items-center justify-between px-5 py-3 border-b border-zinc-200 dark:border-zinc-700">
           <span className="text-sm font-bold uppercase tracking-widest text-zinc-700 dark:text-zinc-300">Bộ lọc tìm kiếm</span>

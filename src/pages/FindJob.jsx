@@ -101,7 +101,7 @@ const SidebarContent = ({
         />
         <span className="material-symbols-outlined absolute right-2 top-2.5 text-zinc-400 text-lg">search</span>
       </div>
-      <div className="flex flex-wrap gap-1.5 max-h-40 md:max-h-48 overflow-y-auto p-1 scrollbar-thin scrollbar-thumb-zinc-200">
+      <div className="flex flex-wrap gap-1.5 max-h-40 md:max-h-48 overflow-y-auto p-1 sleek-scroll">
         {filteredSkills.map((skill) => {
           const isSelected = filters.skills.includes(skill.name);
           return (

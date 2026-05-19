@@ -129,7 +129,7 @@ const Consulting = () => {
                     />
                     <span className="material-symbols-outlined absolute right-2 top-2.5 text-zinc-400 text-lg">search</span>
                   </div>
-                  <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-700">
+                  <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto sleek-scroll">
                     {filtersData.skills
                       .filter(s => s.name.toLowerCase().includes(skillSearch.toLowerCase()))
                       .sort((a, b) => {

@@ -79,12 +79,19 @@
     --color-outline-variant: #4a3f34;
   }
 
-  /* Smooth transitions for theme change */
-  .dark *,
-  * {
-    transition-property: background-color, border-color;
-    transition-duration: 200ms;
-    transition-timing-function: ease-in-out;
+  /*
+   * Theme transition — only apply to key layout elements, NOT every DOM node.
+   * This prevents lag on pages with hundreds of elements (FindJob, Consulting).
+   */
+  body,
+  header,
+  footer,
+  main,
+  aside,
+  nav,
+  section > div,
+  .theme-transition {
+    transition: background-color 200ms ease-in-out, border-color 200ms ease-in-out, color 200ms ease-in-out;
   }
 
   /* Override for elements that should NOT animate (charts, etc) */
@@ -92,5 +99,31 @@
   svg,
   [data-no-theme-transition] {
     transition: none !important;
+  }
+
+  /* ─── Sleek scrollbar for sidebar & skill lists ──────────────────────── */
+  aside::-webkit-scrollbar,
+  .sleek-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+  aside::-webkit-scrollbar-track,
+  .sleek-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  aside::-webkit-scrollbar-thumb,
+  .sleek-scroll::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.25);
+    border-radius: 4px;
+  }
+  aside::-webkit-scrollbar-thumb:hover,
+  .sleek-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.45);
+  }
+
+  /* Firefox scrollbar support */
+  aside,
+  .sleek-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
   }
 }
